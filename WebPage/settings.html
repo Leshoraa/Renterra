@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Renterra - Pengaturan Sistem</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,600,1,0" />
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 2px solid var(--bg-color);
+        }
+        .setting-row:last-child {
+            border-bottom: none;
+        }
+        .setting-info h4 {
+            margin: 0;
+            color: var(--text-color);
+            font-size: 1rem;
+        }
+        .setting-info p {
+            margin: 4px 0 0 0;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        .config-input {
+            background-color: var(--bg-color);
+            border: none;
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: var(--text-color);
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 1rem;
+            box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
+            outline: none;
+            width: 100%;
+        }
+        .btn-danger {
+            background: var(--bg-color);
+            border: none;
+            color: var(--danger);
+            font-weight: 600;
+            padding: 12px 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-out);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            width: 100%;
+            margin-top: 16px;
+        }
+        .btn-danger:active {
+            box-shadow: var(--shadow-in);
+        }
+        .btn-primary {
+            background: var(--bg-color);
+            border: none;
+            color: var(--accent);
+            font-weight: 600;
+            padding: 12px 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-out);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            width: 100%;
+            margin-top: 16px;
+        }
+        .btn-primary:active {
+            box-shadow: var(--shadow-in);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-top">
+                <div class="sidebar-brand">
+                    <div class="brand-logo">
+                        <span class="material-symbols-rounded ic-brand">psychiatry</span>
+                    </div>
+                    <h1 class="brand-text">Renterra</h1>
+                </div>
+                <div class="sidebar-divider"></div>
+                <nav class="sidebar-nav">
+                    <a href="index.html" class="nav-item">
+                        <span class="material-symbols-rounded ic-dash">dashboard</span>
+                        <span class="nav-label">Dashboard</span>
+                    </a>
+                    <a href="monitoring.html" class="nav-item">
+                        <span class="material-symbols-rounded ic-mon">monitoring</span>
+                        <span class="nav-label">Monitoring</span>
+                    </a>
+                    <a href="history.html" class="nav-item">
+                        <span class="material-symbols-rounded ic-hist">history</span>
+                        <span class="nav-label">Riwayat</span>
+                    </a>
+                    <a href="settings.html" class="nav-item active">
+                        <span class="material-symbols-rounded ic-set">settings</span>
+                        <span class="nav-label">Pengaturan</span>
+                    </a>
+                </nav>
+            </div>
+            <div class="sidebar-bottom">
+                <div class="sidebar-divider"></div>
+                <div class="user-profile neumorph-profile-inset">
+                    <div class="avatar">
+                        <span class="material-symbols-rounded">person</span>
+                    </div>
+                    <span class="user-name">Hyprlan</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="dashboard-wrapper">
+            <header class="neumorph-header">
+                <div class="header-left">
+                    <div class="header-title">
+                        <h1>Konfigurasi <span class="hide-on-mobile">Sistem</span></h1>
+                    </div>
+                </div>
+            </header>
+
+            <main class="bento-grid">
+                
+                <!-- Actuator Control Module -->
+                <div class="bento-card span-2">
+                    <div class="card-header">
+                        <span class="material-symbols-rounded icon-accent ic-dash">power</span>
+                        <h3>AKTUATOR / RELAY (SIMULASI)</h3>
+                        <span class="badge">Hardware</span>
+                    </div>
+                    <div class="neumorph-pill-inset" style="padding: 8px 16px; margin-top: 16px;">
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <h4>Pompa Irigasi</h4>
+                                <p>Sistem penyiraman air otomatis</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="toggle_pump">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <h4>Kipas Ekstraktor</h4>
+                                <p>Pendingin sirkulasi rumah kaca</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="toggle_fan">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <h4>Lampu UV Grow</h4>
+                                <p>Cahaya fotosintesis buatan</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="toggle_led" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Database Tools -->
+                <div class="bento-card span-2 compact-card">
+                    <div class="card-header">
+                        <span class="material-symbols-rounded icon-accent ic-temp">database</span>
+                        <h3>MANAJEMEN DATABASE</h3>
+                        <span class="badge">Firebase</span>
+                    </div>
+                    <div style="margin-top: 16px;">
+                        <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.5;">
+                            Kosongkan riwayat data untuk menghemat kuota Firebase Anda. Tindakan ini tidak dapat dibatalkan.
+                        </p>
+                        <button id="btn_clear_db" class="btn-danger">
+                            <span class="material-symbols-rounded">delete_forever</span>
+                            Purge History Data
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Alert Thresholds -->
+                <div class="bento-card span-2">
+                    <div class="card-header">
+                        <span class="material-symbols-rounded icon-accent ic-cloudy">notifications_active</span>
+                        <h3>AMBANG BATAS PERINGATAN</h3>
+                    </div>
+                    <div style="margin-top: 16px;">
+                        <div style="margin-bottom: 16px;">
+                            <label style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 8px;">Peringatan Tanah Kering (ADC > x)</label>
+                            <input type="number" id="input_soil_alert" class="config-input" value="3000">
+                        </div>
+                        <div style="margin-bottom: 16px;">
+                            <label style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 8px;">Peringatan Suhu Panas (°C > x)</label>
+                            <input type="number" id="input_temp_alert" class="config-input" value="33">
+                        </div>
+                        <button id="btn_save_threshold" class="btn-primary">
+                            <span class="material-symbols-rounded">save</span>
+                            Simpan Threshold
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Identitas Node -->
+                <div class="bento-card span-2 compact-card">
+                    <div class="card-header">
+                        <span class="material-symbols-rounded icon-accent ic-mon">memory</span>
+                        <h3>IDENTITAS NODE</h3>
+                    </div>
+                    <div style="margin-top: 16px;">
+                        <div style="margin-bottom: 16px;">
+                            <label style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 8px;">Nama Lokasi Sensor (Alias)</label>
+                            <input type="text" id="input_node_name" class="config-input" value="Kebun Tomat Utara">
+                        </div>
+                        <button id="btn_save_node" class="btn-primary">
+                            <span class="material-symbols-rounded">check_circle</span>
+                            Perbarui Nama
+                        </button>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+
+        <!-- Bottom Nav -->
+        <nav class="bottom-nav">
+            <a href="index.html" class="nav-item">
+                <span class="material-symbols-rounded ic-dash">dashboard</span>
+                <span class="nav-label">Dashboard</span>
+            </a>
+            <a href="monitoring.html" class="nav-item">
+                <span class="material-symbols-rounded ic-mon">monitoring</span>
+                <span class="nav-label">Monitoring</span>
+            </a>
+            <a href="history.html" class="nav-item">
+                <span class="material-symbols-rounded ic-hist">history</span>
+                <span class="nav-label">Riwayat</span>
+            </a>
+            <a href="settings.html" class="nav-item active">
+                <span class="material-symbols-rounded ic-set">settings</span>
+                <span class="nav-label">Pengaturan</span>
+            </a>
+        </nav>
+    </div>
+    <script type="module" src="settings.js"></script>
+</body>
+</html>

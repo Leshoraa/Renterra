@@ -723,10 +723,51 @@ h3 {
         -webkit-line-clamp: unset;
     }
     
-    /* Giant Layout - Order 4 */
     .giant-layout {
         order: 4;
         min-height: 250px;
         padding: 20px;
     }
+}
+
+/* Custom Toggle Switch */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 28px;
+}
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: var(--bg-color);
+    box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
+    transition: .4s;
+    border-radius: 34px;
+}
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 4px;
+    bottom: 4px;
+    background-color: var(--text-muted);
+    transition: .4s;
+    border-radius: 50%;
+    box-shadow: 2px 2px 5px var(--shadow-dark);
+}
+input:checked + .toggle-slider {
+    background-color: var(--c-brand);
+    box-shadow: inset 2px 2px 5px rgba(0,0,0,0.2);
+}
+input:checked + .toggle-slider:before {
+    transform: translateX(22px);
+    background-color: #fff;
 }
