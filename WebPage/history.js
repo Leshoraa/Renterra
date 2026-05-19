@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, query, limitToLast, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getDatabase, ref, query, limitToLast, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 import firebaseConfig from './config.js';
 
 const app = initializeApp(firebaseConfig);
@@ -13,10 +13,11 @@ const avgHumEl = document.getElementById('avg_hum');
 
 let globalData = [];
 
-// Fetch History Data (Max 500 records for the table)
-const historyQuery = query(ref(db, 'SensorHistory'), limitToLast(500));
+// Fetch History Data (Max 200 records for the table to optimize RAM)
+const historyQuery = query(ref(db, 'SensorHistory'), limitToLast(200));
 
-get(historyQuery).then(snapshot => {
+onValue(historyQuery, (snapshot) => {
+    globalData = [];
     if (snapshot.exists()) {
         const rawData = snapshot.val();
         let html = '';
@@ -60,13 +61,15 @@ get(historyQuery).then(snapshot => {
             avgHumEl.innerText = (sumHum / validCount).toFixed(1) + " %";
         }
     } else {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;">Tidak ada data riwayat tersedia.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: var(--text-muted);">Riwayat kosong. Menunggu siklus simpan ESP32 (5 Menit)...</td></tr>';
         badge.innerText = "0 Records";
+        avgTempEl.innerText = "-- °C";
+        avgHumEl.innerText = "-- %";
     }
-}).catch(err => {
+}, (err) => {
     console.error("Firebase Error:", err);
     badge.innerText = "Error";
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--danger);">Gagal memuat data dari database.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--danger);">Gagal memuat data dari database. Pastikan koneksi aman.</td></tr>';
 });
 
 // CSV Export Logic
