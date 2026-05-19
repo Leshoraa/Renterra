@@ -171,7 +171,7 @@
                                 <p>Cahaya fotosintesis buatan</p>
                             </div>
                             <label class="toggle-switch">
-                                <input type="checkbox" id="toggle_led" checked>
+                                <input type="checkbox" id="toggle_led">
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>
@@ -205,11 +205,11 @@
                     <div style="margin-top: 16px;">
                         <div style="margin-bottom: 16px;">
                             <label style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 8px;">Peringatan Tanah Kering (ADC > x)</label>
-                            <input type="number" id="input_soil_alert" class="config-input" value="3000">
+                            <input type="number" id="input_soil_alert" class="config-input" placeholder="Contoh: 3000">
                         </div>
                         <div style="margin-bottom: 16px;">
                             <label style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 8px;">Peringatan Suhu Panas (°C > x)</label>
-                            <input type="number" id="input_temp_alert" class="config-input" value="33">
+                            <input type="number" id="input_temp_alert" class="config-input" placeholder="Contoh: 33">
                         </div>
                         <button id="btn_save_threshold" class="btn-primary">
                             <span class="material-symbols-rounded">save</span>
@@ -227,7 +227,7 @@
                     <div style="margin-top: 16px;">
                         <div style="margin-bottom: 16px;">
                             <label style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 8px;">Nama Lokasi Sensor (Alias)</label>
-                            <input type="text" id="input_node_name" class="config-input" value="Kebun Tomat Utara">
+                            <input type="text" id="input_node_name" class="config-input" placeholder="Memuat dari database...">
                         </div>
                         <button id="btn_save_node" class="btn-primary">
                             <span class="material-symbols-rounded">check_circle</span>

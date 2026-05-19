@@ -771,3 +771,20 @@ input:checked + .toggle-slider:before {
     transform: translateX(22px);
     background-color: #fff;
 }
+
+/* Location Dropdown Two-line Item */
+.location-item {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 2px !important;
+}
+.loc-kota {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-color);
+}
+.loc-prov {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}

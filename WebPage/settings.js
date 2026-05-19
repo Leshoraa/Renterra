@@ -21,6 +21,23 @@ onValue(actRef, (snapshot) => {
     }
 });
 
+// Load Threshold values from Firebase
+onValue(ref(db, 'SensorConfig/Thresholds'), (snapshot) => {
+    if (snapshot.exists()) {
+        const t = snapshot.val();
+        document.getElementById('input_soil_alert').value = t.soil_alert || '';
+        document.getElementById('input_temp_alert').value = t.temp_alert || '';
+    }
+});
+
+// Load Node Identity from Firebase
+onValue(ref(db, 'SensorConfig/Identity'), (snapshot) => {
+    if (snapshot.exists()) {
+        const d = snapshot.val();
+        document.getElementById('input_node_name').value = d.alias || '';
+    }
+});
+
 // Write state changes to DB
 const updateActuator = () => {
     set(actRef, {

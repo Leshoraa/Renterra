@@ -10,6 +10,8 @@ const badge = document.getElementById('data_count_badge');
 const btnExport = document.getElementById('btn_export_csv');
 const avgTempEl = document.getElementById('avg_temp');
 const avgHumEl = document.getElementById('avg_hum');
+const trendTempEl = document.getElementById('trend_temp_delta');
+const trendHumEl = document.getElementById('trend_hum_delta');
 
 let globalData = [];
 
@@ -58,8 +60,34 @@ get(historyQuery).then((snapshot) => {
         badge.innerText = `${entries.length} Records`;
         
         if (validCount > 0) {
-            avgTempEl.innerText = (sumTemp / validCount).toFixed(1) + " \u00b0C";
-            avgHumEl.innerText = (sumHum / validCount).toFixed(1) + " %";
+            const avgT = sumTemp / validCount;
+            const avgH = sumHum / validCount;
+            avgTempEl.innerText = avgT.toFixed(1) + " \u00b0C";
+            avgHumEl.innerText = avgH.toFixed(1) + " %";
+
+            // Trend delta: bandingkan 50% data pertama vs 50% data terakhir dari dataset
+            const half = Math.floor(entries.length / 2);
+            if (half > 0) {
+                const olderEntries = entries.slice(half);
+                const newerEntries = entries.slice(0, half);
+                const avgOldT = olderEntries.reduce((s, e) => s + (e.suhu || 0), 0) / olderEntries.length;
+                const avgNewT = newerEntries.reduce((s, e) => s + (e.suhu || 0), 0) / newerEntries.length;
+                const avgOldH = olderEntries.reduce((s, e) => s + (e.kelembapan || 0), 0) / olderEntries.length;
+                const avgNewH = newerEntries.reduce((s, e) => s + (e.kelembapan || 0), 0) / newerEntries.length;
+
+                const deltaT = ((avgNewT - avgOldT) / avgOldT * 100).toFixed(1);
+                const deltaH = ((avgNewH - avgOldH) / avgOldH * 100).toFixed(1);
+
+                const iconT = deltaT >= 0 ? 'trending_up' : 'trending_down';
+                const colorT = deltaT >= 0 ? 'var(--c-temp)' : 'var(--c-drop)';
+                trendTempEl.innerHTML = `<span class="material-symbols-rounded" style="font-size:1rem;">${iconT}</span> ${deltaT >= 0 ? '+' : ''}${deltaT}% dari periode sebelumnya`;
+                trendTempEl.style.color = colorT;
+
+                const iconH = deltaH >= 0 ? 'trending_up' : 'trending_down';
+                const colorH = deltaH >= 0 ? 'var(--c-drop)' : 'var(--c-temp)';
+                trendHumEl.innerHTML = `<span class="material-symbols-rounded" style="font-size:1rem;">${iconH}</span> ${deltaH >= 0 ? '+' : ''}${deltaH}% dari periode sebelumnya`;
+                trendHumEl.style.color = colorH;
+            }
         }
     } else {
         tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: var(--text-muted);">Riwayat kosong. ESP32 menyimpan riwayat setiap 5 menit.</td></tr>';

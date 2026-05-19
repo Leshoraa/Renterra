@@ -418,10 +418,15 @@ async function initBMKG() {
         const res = await fetch(BMKG_API_WILAYAH);
         bmkgStations = await res.json();
         const formatCity = (city) => city.replace(/Kab\.\s|Kota\s/g, '');
-        bmkgStations.forEach(station => {
+        const formatProv = (prov) => prov.replace(/Propinsi\s|Provinsi\s/g, '');
+        bmkgStations.forEach(station => {
             const item = document.createElement('div');
-            item.className = 'dropdown-item';
-            item.innerText = formatCity(station.kota);
+            item.className = 'dropdown-item location-item';
+            item.innerHTML = `
+                <span class="loc-kota">${formatCity(station.kota)}</span>
+                <span class="loc-prov">${formatProv(station.propinsi)}</span>
+            `;
+            item.dataset.search = (station.kota + ' ' + station.propinsi).toLowerCase();
             item.addEventListener('click', (e) => {
                 e.stopPropagation();
                 elDropdownSelectedText.innerText = formatCity(station.kota);
@@ -437,11 +442,8 @@ async function initBMKG() {
             const query = e.target.value.toLowerCase();
             const items = elDropdownItemsContainer.querySelectorAll('.dropdown-item');
             items.forEach(item => {
-                if (item.innerText.toLowerCase().includes(query)) {
-                    item.style.display = 'block';
-                } else {
-                    item.style.display = 'none';
-                }
+                const match = (item.dataset.search || item.innerText.toLowerCase()).includes(query);
+                item.style.display = match ? 'flex' : 'none';
             });
         });
         if (navigator.geolocation) {
@@ -458,7 +460,7 @@ async function initBMKG() {
                             terdekat = st;
                         }
                     });
-                    elDropdownSelectedText.innerText = `${formatCity(terdekat.kota)}`;
+                    elDropdownSelectedText.innerText = `${formatCity(terdekat.kota)}, ${formatProv(terdekat.propinsi)}`;
                     fetchWeather(terdekat.id);
                 },
                 (err) => {
