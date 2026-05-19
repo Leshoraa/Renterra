@@ -1,26 +1,27 @@
 #include <WiFi.h>
 #include <esp_now.h>
 #include <Firebase_ESP_Client.h>
+#include "esp_wifi.h"
 
-// Provide the token generation process info.
 #include "addons/TokenHelper.h"
-// Provide the RTDB payload printing info and other helper functions.
 #include "addons/RTDBHelper.h"
 
-// Kredensial WiFi Rumah
 #define WIFI_SSID "Kasminingsih"
 #define WIFI_PASSWORD "hidet4mp4n"
 
-// --- KONFIGURASI FIREBASE ---
 #define API_KEY "AIzaSyC84gJ1b0FwP-xV0ckzRuV2HzOeNRYobGE"
 #define DATABASE_URL "renterra-401c5-default-rtdb.asia-southeast1.firebasedatabase.app"
+
+#define WIFI_CHANNEL 3
 
 FirebaseData fbdo;
 FirebaseAuth auth;
 FirebaseConfig config;
 
-// Struktur data harus sama persis dengan yang ada di esp32-Garden.ino
+// Struktur wajib sinkron dengan Kebun (Fast Polling)
 typedef struct DataPacket {
+  uint8_t type; 
+  int currentInterval;
   float temperature;
   float humidity;
   int rawSoil;
@@ -29,85 +30,158 @@ typedef struct DataPacket {
 } DataPacket;
 
 DataPacket myData;
-volatile bool newDataReady = false;
+FirebaseJson json;
+FirebaseJson historyJson; // Tambahan untuk memori history
 
-// Callback ketika menerima data dari Node Kebun via ESP-NOW
+uint8_t gardenMac[6];
+
+volatile bool newDataReady = false;
+volatile bool needReply = false;
+
+int currentUpdateInterval = 15;
+unsigned long lastFbCheck = 0;
+
+portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;
+
 void OnDataRecv(const esp_now_recv_info *info, const uint8_t *incomingData, int len) {
-  memcpy(&myData, incomingData, sizeof(myData));
-  newDataReady = true;
+  if (len == sizeof(DataPacket)) {
+    DataPacket incomingPacket;
+    memcpy(&incomingPacket, incomingData, sizeof(incomingPacket));
+    memcpy(gardenMac, info->src_addr, 6);
+
+    portENTER_CRITICAL_ISR(&mux);
+    
+    // Hanya upload ke Firebase jika ini tipe 0 (Sensor), BUKAN Ping (tipe 1)
+    if (incomingPacket.type == 0) {
+      memcpy(&myData, &incomingPacket, sizeof(myData));
+      newDataReady = true;
+    }
+
+    // Jika alat kebun tidak tahu interval terupdate kita, beri tahu!
+    if (incomingPacket.currentInterval != currentUpdateInterval) {
+      needReply = true;
+    }
+
+    portEXIT_CRITICAL_ISR(&mux);
+  }
 }
 
 void setup() {
   Serial.begin(115200);
   delay(1000);
 
-  // 1. Koneksi ke WiFi
   WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  Serial.print("Connecting to Wi-Fi");
+
+  Serial.print("Connecting");
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print(".");
     delay(300);
   }
-  Serial.println("\nConnected to Wi-Fi");
+  Serial.println();
+  Serial.print("WiFi Channel: ");
+  Serial.println(WiFi.channel());
 
-  // 2. Inisialisasi Firebase
-  Serial.printf("Firebase Client v%s\n\n", FIREBASE_CLIENT_VERSION);
   config.api_key = API_KEY;
   config.database_url = DATABASE_URL;
 
-  // Sign up anonim/akses langsung
   if (Firebase.signUp(&config, &auth, "", "")) {
-    Serial.println("Firebase Auth success");
-  } else {
-    Serial.printf("%s\n", config.signer.signupError.message.c_str());
+    Serial.println("Firebase Ready");
   }
 
-  // Assign the callback function for the long running token generation task
   config.token_status_callback = tokenStatusCallback;
-  
   Firebase.begin(&config, &auth);
   Firebase.reconnectWiFi(true);
 
-  // 3. Inisialisasi ESP-NOW
+  esp_wifi_set_channel(WIFI_CHANNEL, WIFI_SECOND_CHAN_NONE);
+
   if (esp_now_init() != ESP_OK) {
-    Serial.println("Error initializing ESP-NOW");
+    Serial.println("ESP-NOW Error");
     return;
   }
-  esp_now_register_recv_cb((esp_now_recv_cb_t)OnDataRecv);
-  
-  Serial.println("Sistem Gateway Siap Menerima & Mengunggah Data!");
+
+  esp_now_register_recv_cb(OnDataRecv);
+  Serial.println("Gateway Ready");
 }
 
 void loop() {
-  // Jika ada data baru dari ESP-NOW
-  if (newDataReady) {
-    newDataReady = false;
+  bool localNeedReply = false;
+  bool localNewData = false;
 
-    Serial.println("\n[GATEWAY] DATA DITERIMA DARI KEBUN:");
+  portENTER_CRITICAL(&mux);
+  localNeedReply = needReply;
+  localNewData = newDataReady;
+  needReply = false;
+  newDataReady = false;
+  portEXIT_CRITICAL(&mux);
+
+  // Bagian Heartbeat Reply (Sync Interval)
+  if (localNeedReply) {
+    esp_now_peer_info_t peerInfo;
+    memset(&peerInfo, 0, sizeof(peerInfo));
+    memcpy(peerInfo.peer_addr, gardenMac, 6);
+    peerInfo.channel = WIFI_CHANNEL;
+    peerInfo.encrypt = false;
+
+    if (!esp_now_is_peer_exist(gardenMac)) {
+      esp_now_add_peer(&peerInfo);
+    }
+
+    esp_now_send(
+      gardenMac,
+      (uint8_t *)&currentUpdateInterval,
+      sizeof(currentUpdateInterval)
+    );
+    
+    Serial.printf("[ESP-NOW] Interval update (%d dtk) dikirim ke Kebun\n", currentUpdateInterval);
+  }
+
+  // Bagian Upload Firebase (Hanya dieksekusi dari DataPacket Type 0)
+  if (localNewData) {
+    Serial.println("\n[GATEWAY] DATA DITERIMA & DITERUSKAN");
     Serial.print("Suhu: "); Serial.println(myData.temperature);
     Serial.print("Lembap: "); Serial.println(myData.humidity);
-    Serial.print("Tanah (ADC): "); Serial.println(myData.rawSoil);
-    Serial.print("Hujan (ADC): "); Serial.println(myData.rawRain);
-    Serial.print("Baterai: "); Serial.print(myData.batteryPercentage); Serial.println("%");
+    Serial.print("Tanah: "); Serial.println(myData.rawSoil);
+    Serial.print("Hujan: "); Serial.println(myData.rawRain);
+    Serial.print("Baterai: "); Serial.println(myData.batteryPercentage);
 
-    // Proses pengiriman ke Firebase Realtime Database
     if (Firebase.ready()) {
-      Serial.println("[FIREBASE] Mengunggah data ke Cloud...");
+      // 1. UPDATE DATA REAL-TIME (Tiban/Overwrite)
+      json.clear();
+      json.set("suhu", myData.temperature);
+      json.set("kelembapan", myData.humidity);
+      json.set("adc_tanah", myData.rawSoil);
+      json.set("adc_hujan", myData.rawRain);
+      json.set("baterai_persen", myData.batteryPercentage);
 
-      // Mengirim data ke path "/SensorKebun" di database
-      Firebase.RTDB.setFloat(&fbdo, "/SensorKebun/suhu", myData.temperature);
-      Firebase.RTDB.setFloat(&fbdo, "/SensorKebun/kelembapan", myData.humidity);
-      Firebase.RTDB.setInt(&fbdo, "/SensorKebun/adc_tanah", myData.rawSoil);
-      Firebase.RTDB.setInt(&fbdo, "/SensorKebun/adc_hujan", myData.rawRain);
-      Firebase.RTDB.setInt(&fbdo, "/SensorKebun/baterai_persen", myData.batteryPercentage);
-      
-      // Memberi timestamp (waktu server Firebase) kapan data terakhir masuk
+      Firebase.RTDB.updateNode(&fbdo, "/SensorKebun", &json);
       Firebase.RTDB.setTimestamp(&fbdo, "/SensorKebun/last_update");
+      
+      // 2. PUSH DATA HISTORIS (Numpuk ke bawah)
+      historyJson.clear();
+      historyJson.set("suhu", myData.temperature);
+      historyJson.set("kelembapan", myData.humidity);
+      historyJson.set("adc_tanah", myData.rawSoil);
+      historyJson.set("timestamp/.sv", "timestamp"); // Otomatis catat waktu server Firebase
+      
+      Firebase.RTDB.pushJSON(&fbdo, "/SensorHistory", &historyJson);
 
-      Serial.println("[FIREBASE] Unggah Berhasil!");
-    } else {
-      Serial.println("[FIREBASE] Koneksi Firebase belum siap/terputus.");
+      Serial.println("[FIREBASE] Upload Status & History OK");
     }
+  }
+
+  // Cek Interval Baru dari Web/Firebase (tiap 2 detik)
+  if (millis() - lastFbCheck > 2000) {
+    if (Firebase.ready()) {
+      if (Firebase.RTDB.getInt(&fbdo, "/SensorKebun/update_interval")) {
+        int fbInterval = fbdo.intData();
+        // Cek agar tidak error jika interval diset 0 atau ngaco
+        if (fbInterval >= 1 && fbInterval != currentUpdateInterval) {
+          currentUpdateInterval = fbInterval;
+          Serial.printf("[FIREBASE] Perintah interval baru di Web: %d detik\n", currentUpdateInterval);
+        }
+      }
+    }
+    lastFbCheck = millis();
   }
 }

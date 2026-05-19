@@ -1,15 +1,20 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Smart Gateway</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,600,1,0" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,600,1,0" />
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
     <div class="app-container">
         <aside class="sidebar">
@@ -22,11 +27,11 @@
                 </div>
                 <div class="sidebar-divider"></div>
                 <nav class="sidebar-nav">
-                    <a href="#" class="nav-item active">
+                    <a href="index.html" class="nav-item active">
                         <span class="material-symbols-rounded">dashboard</span>
                         <span class="nav-label">Dashboard</span>
                     </a>
-                    <a href="#" class="nav-item">
+                    <a href="monitoring.html" class="nav-item">
                         <span class="material-symbols-rounded">monitoring</span>
                         <span class="nav-label">Monitoring</span>
                     </a>
@@ -50,6 +55,7 @@
                 </div>
             </div>
         </aside>
+
         <div class="dashboard-wrapper">
             <header class="neumorph-header">
                 <div class="header-left">
@@ -65,7 +71,8 @@
                         <div class="dropdown-list" id="location_list">
                             <div class="dropdown-search-wrapper">
                                 <span class="material-symbols-rounded">search</span>
-                                <input type="text" id="location_search" class="dropdown-search" placeholder="Cari kota..." autocomplete="off">
+                                <input type="text" id="location_search" class="dropdown-search"
+                                    placeholder="Cari kota..." autocomplete="off">
                             </div>
                             <div class="dropdown-items-container" id="location_items">
                             </div>
@@ -111,51 +118,81 @@
                             <h3>SUHU</h3>
                         </div>
                         <div class="value-wrapper">
-                            <span class="value" id="suhu">--</span>
+                            <span class="value tabular-nums" id="suhu">--</span>
                             <span class="unit">°C</span>
                         </div>
+                        <div class="sensor-progress-wrapper">
+                            <div class="sensor-progress-bar" id="bar_suhu"></div>
+                        </div>
                     </div>
+                
                     <div class="bento-card compact-card">
                         <div class="card-header-compact">
                             <span class="material-symbols-rounded icon-accent">water_drop</span>
                             <h3>KELEMBAPAN</h3>
                         </div>
                         <div class="value-wrapper">
-                            <span class="value" id="kelembapan">--</span>
+                            <span class="value tabular-nums" id="kelembapan">--</span>
                             <span class="unit">%</span>
                         </div>
+                        <div class="sensor-progress-wrapper">
+                            <div class="sensor-progress-bar" id="bar_kelembapan"></div>
+                        </div>
                     </div>
+                
                     <div class="bento-card compact-card">
                         <div class="card-header-compact">
                             <span class="material-symbols-rounded icon-accent">grass</span>
                             <h3>ADC TANAH</h3>
                         </div>
                         <div class="value-wrapper">
-                            <span class="value" id="adc_tanah">----</span>
+                            <span class="value tabular-nums" id="adc_tanah">----</span>
                             <div class="status-badge" id="status_tanah">Wait...</div>
+                        </div>
+                        <div class="sensor-progress-wrapper">
+                            <div class="sensor-progress-bar" id="bar_tanah"></div>
                         </div>
                     </div>
                 </div>
+
                 <div class="bento-card span-4 giant-layout">
-                    <div class="card-header">
-                        <span class="material-symbols-rounded icon-accent">area_chart</span>
-                        <h3>GRAFIK HISTORIS (MAIN LAYOUT)</h3>
-                    </div>
-                    <div class="giant-content-placeholder">
-                        <div class="placeholder-graphic">
-                            <span class="material-symbols-rounded placeholder-icon">insert_chart</span>
-                            <p>Area Layout Utama siap diintegrasikan dengan Firebase Historical Data</p>
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span class="material-symbols-rounded icon-accent">area_chart</span>
+                            <h3>GRAFIK HISTORIS</h3>
                         </div>
+                
+                        <div class="neumorph-pill-inset custom-dropdown" id="chart_filter_dropdown"
+                            style="padding: 6px 16px; min-width: 140px; display: flex; align-items: center; justify-content: space-between; gap: 4px; z-index: 50;">
+                            <div class="dropdown-selected" id="chart_filter_text" data-value="live"
+                                style="font-weight: 600; font-size: 0.85rem;">Live Stream</div>
+                            <span class="material-symbols-rounded icon-accent dropdown-arrow"
+                                style="font-size: 1.1rem; margin-left: 4px;">expand_more</span>
+                            <div class="dropdown-list" id="chart_filter_list" style="width: 100%; top: 120%;">
+                                <div class="dropdown-items-container">
+                                    <div class="dropdown-item chart-filter-item active" data-value="live">Real-time</div>
+                                    <div class="dropdown-item chart-filter-item" data-value="jam">Per Jam</div>
+                                    <div class="dropdown-item chart-filter-item" data-value="hari">Per Hari</div>
+                                    <div class="dropdown-item chart-filter-item" data-value="minggu">Per Minggu</div>
+                                    <div class="dropdown-item chart-filter-item" data-value="bulan">Per Bulan</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="giant-content-placeholder" style="position: relative; padding: 16px;">
+                        <canvas id="historyChart"></canvas>
                     </div>
                 </div>
             </main>
         </div>
+
         <nav class="bottom-nav">
-            <a href="#" class="nav-item active">
+            <a href="index.html" class="nav-item active">
                 <span class="material-symbols-rounded">dashboard</span>
                 <span class="nav-label">Dashboard</span>
             </a>
-            <a href="#" class="nav-item">
+            <a href="monitoring.html" class="nav-item">
                 <span class="material-symbols-rounded">monitoring</span>
                 <span class="nav-label">Monitoring</span>
             </a>
@@ -171,4 +208,5 @@
     </div>
     <script type="module" src="app.js"></script>
 </body>
+
 </html>

@@ -1,0 +1,169 @@
+/* ==========================================================================
+   MONITORING.CSS - DIAGNOSTIC PAGE STYLING FOR RENTERRA
+   ========================================================================== */
+
+/* Status Indikator Dot */
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--text-muted);
+}
+
+.dot.online {
+    background-color: var(--accent);
+}
+
+/* Card 1: Daftar Node */
+.monitoring-node-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 10px;
+}
+
+.monitoring-node-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.node-name {
+    font-weight: 600;
+}
+
+/* Card 2: Sub-keterangan Polling */
+.monitoring-subtext {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-top: 8px;
+}
+
+/* Card 3: Inset Terminal Wrapper & Logs */
+.terminal-container {
+    box-shadow: var(--shadow-in);
+    border-radius: var(--radius-sm);
+    min-height: 200px;
+}
+
+.terminal-log {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.85rem;
+    padding: 16px;
+    height: 180px;
+    overflow-y: auto;
+    color: var(--text-main);
+    line-height: 1.6;
+    width: 100%;
+}
+
+.log-line {
+    margin-bottom: 4px;
+}
+
+.log-time {
+    color: var(--text-muted);
+    margin-right: 8px;
+}
+
+.log-success {
+    color: var(--accent);
+}
+
+.log-info {
+    color: var(--info);
+}
+
+/* Card 4: Diagnostik Kapasitas Baterai (Layout Vertikal Baru) */
+.battery-diagnostic-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.battery-progress-wrapper {
+    width: 100%;
+    height: 12px;
+    border-radius: 6px;
+    box-shadow: var(--shadow-in);
+    padding: 2px;
+}
+
+.battery-progress-bar {
+    width: 0%;
+    height: 100%;
+    background-color: var(--accent);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+.battery-status-lbl {
+    margin: 0 !important;
+    color: var(--accent);
+}
+
+/* Card 5: Komponen Pengaturan Interval (Layout Vertikal Baru) */
+.config-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+}
+
+.config-input {
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--bg-color);
+    box-shadow: var(--shadow-in);
+    font-weight: 600;
+    color: var(--text-main);
+    outline: none;
+}
+
+.config-dropdown-pill {
+    padding: 10px 16px;
+    min-width: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+}
+
+.config-dropdown-pill .dropdown-selected {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.config-dropdown-pill .dropdown-arrow {
+    margin-left: 8px;
+}
+
+.config-dropdown-list {
+    width: 100%;
+}
+
+.config-btn-save {
+    padding: 12px 24px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--bg-color);
+    box-shadow: var(--shadow-out);
+    font-weight: 700;
+    color: var(--accent);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.config-btn-save:hover {
+    box-shadow: var(--shadow-in);
+}

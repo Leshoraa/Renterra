@@ -5,15 +5,19 @@
     --shadow-light: #FFFFFF;
     --shadow-dark: #c8d2e0;
     --accent: #00b894;
+    /* HIJAU */
     --info: #0984e3;
+    /* BIRU */
     --danger: #d63031;
-    
-    /* Nilai universal untuk card bento biasa */
+    /* MERAH (Bisa dibiarkan untuk darurat lain) */
+    --warning: #f39c12;
+    /* KUNING (Warna baru yang kamu minta) */
+
     --shadow-out: 8px 8px 22px var(--shadow-dark), -10px -10px 22px var(--shadow-light);
     --shadow-nav-out: 5px 5px 14px var(--shadow-dark), -6px -6px 16px var(--shadow-light);
     --shadow-in: inset 3px 3px 6px var(--shadow-dark), inset -4px -4px 5px var(--shadow-light);
     --shadow-in-sm: inset 4px 3px 5px var(--shadow-dark), inset -4px -3px 5px var(--shadow-light);
-    
+
     --radius-sm: 12px;
     --radius-md: 18px;
     --radius-lg: 24px;
@@ -481,6 +485,42 @@ h3 {
 /* Base style untuk bottom navbar (hidden di desktop) */
 .bottom-nav {
     display: none;
+}
+
+/* Bikin angka rata, fix-width, tidak goyang saat berganti angka */
+.tabular-nums {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.5px;
+}
+
+/* Base track progress bar yang cekung */
+.sensor-progress-wrapper {
+    width: 100%;
+    height: 8px;
+    background: var(--bg-color);
+    box-shadow: var(--shadow-in-sm);
+    border-radius: 4px;
+    margin-top: 16px;
+    /* Jarak dari angka ke bar */
+    overflow: hidden;
+}
+
+/* Isi progress bar dengan animasi smooth (Cubic Bezier) */
+.sensor-progress-bar {
+    height: 100%;
+    width: 0%;
+    /* Default awal */
+    border-radius: 4px;
+    background-color: var(--text-muted);
+    /* Transisi width untuk gerak kiri-kanan, dan color untuk perubahan warna */
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.5s ease;
+}
+
+/* Styling Container Grafik */
+#historyChart {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 250px;
 }
 
 @media (max-width: 1024px) {
