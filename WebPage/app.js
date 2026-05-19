@@ -378,30 +378,46 @@ function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
     return R * c;
 }
 
-function mapWeatherIcon(kodeCuaca) {
-    const map = {
-        "0": "clear_day", "1": "partly_cloudy_day", "2": "partly_cloudy_day",
-        "3": "cloud", "4": "cloud", "5": "air", "10": "air",
-        "47": "foggy", "60": "rainy", "61": "rainy", "63": "pouring",
-        "80": "rainy", "95": "thunderstorm", "97": "thunderstorm"
-    };
-    return map[kodeCuaca] || "cloud_sync";
+// WMO Weather Code mapping for Open-Meteo
+function mapWeatherIcon(wmoCode) {
+    if (wmoCode === 0) return 'clear_day';
+    if (wmoCode <= 2) return 'partly_cloudy_day';
+    if (wmoCode === 3) return 'cloud';
+    if (wmoCode <= 49) return 'foggy';
+    if (wmoCode <= 59) return 'rainy_light';
+    if (wmoCode <= 69) return 'rainy';
+    if (wmoCode <= 79) return 'weather_snowy';
+    if (wmoCode <= 82) return 'rainy';
+    if (wmoCode <= 86) return 'weather_snowy';
+    if (wmoCode <= 99) return 'thunderstorm';
+    return 'cloud_sync';
+}
+function wmoToDesc(wmoCode) {
+    if (wmoCode === 0) return 'Cerah';
+    if (wmoCode <= 2) return 'Sebagian Berawan';
+    if (wmoCode === 3) return 'Mendung';
+    if (wmoCode <= 49) return 'Berkabut';
+    if (wmoCode <= 59) return 'Gerimis';
+    if (wmoCode <= 69) return 'Hujan';
+    if (wmoCode <= 82) return 'Hujan Deras';
+    if (wmoCode <= 99) return 'Badai Petir';
+    return 'Tidak Diketahui';
 }
 
-async function fetchWeather(idWilayah) {
+async function fetchWeather(lat, lon) {
     try {
-        elBmkgStatus.innerText = "Memuat...";
-        const res = await fetch(`https://ibnux.github.io/BMKG-importer/cuaca/${idWilayah}.json`);
+        elBmkgStatus.innerText = 'Memuat...';
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weathercode,windspeed_10m&timezone=Asia%2FJakarta&forecast_days=1`;
+        const res = await fetch(url);
         const data = await res.json();
-        if (data && data.length > 0) {
-            const cuacaSekarang = data[0];
-            elBmkgTemp.innerText = cuacaSekarang.tempC;
-            elBmkgStatus.innerText = cuacaSekarang.cuaca;
-            elBmkgTime.innerText = `Update: ${cuacaSekarang.jamCuaca.split(' ')[1]}`;
-            elBmkgIcon.innerText = mapWeatherIcon(cuacaSekarang.kodeCuaca);
-        }
+        const cur = data.current;
+        elBmkgTemp.innerText = cur.temperature_2m.toFixed(1);
+        elBmkgStatus.innerText = wmoToDesc(cur.weathercode);
+        elBmkgTime.innerText = `Angin: ${cur.windspeed_10m} km/h`;
+        elBmkgIcon.innerText = mapWeatherIcon(cur.weathercode);
     } catch (err) {
-        elBmkgStatus.innerText = "Gagal memuat";
+        elBmkgStatus.innerText = 'Gagal memuat';
+        console.error('Open-Meteo error:', err);
     }
 }
 
@@ -415,28 +431,47 @@ async function initBMKG() {
                 elDropdown.classList.remove('active');
             }
         });
+
+        const formatCity = (city) => city ? city.replace(/Kab\.\s|Kota\s/g, '') : '';
+        const formatProv = (prov) => prov ? prov.replace(/Propinsi\s|Provinsi\s/g, '') : '';
+        const getProv = (st) => st.propinsi || st.provinsi || st.prov || '';
+
+        // LANGKAH 1: Cek cache koordinat — tampil instan tanpa tunggu fetch
+        const savedLat = localStorage.getItem('bmkg_lat');
+        const savedLon = localStorage.getItem('bmkg_lon');
+        const savedLabel = localStorage.getItem('bmkg_station_label');
+        if (savedLat && savedLon && savedLabel) {
+            elDropdownSelectedText.innerText = savedLabel;
+            fetchWeather(savedLat, savedLon); // Instan dari cache
+        }
+
+        // LANGKAH 2: Fetch daftar wilayah (bisa pakai cache stale jika ada)
         const res = await fetch(BMKG_API_WILAYAH);
         bmkgStations = await res.json();
-        const formatCity = (city) => city.replace(/Kab\.\s|Kota\s/g, '');
-        const formatProv = (prov) => prov.replace(/Propinsi\s|Provinsi\s/g, '');
-        bmkgStations.forEach(station => {
+
+        bmkgStations.forEach(station => {
             const item = document.createElement('div');
             item.className = 'dropdown-item location-item';
             item.innerHTML = `
                 <span class="loc-kota">${formatCity(station.kota)}</span>
-                <span class="loc-prov">${formatProv(station.propinsi)}</span>
+                <span class="loc-prov">${formatProv(getProv(station))}</span>
             `;
-            item.dataset.search = (station.kota + ' ' + station.propinsi).toLowerCase();
+            item.dataset.search = (station.kota + ' ' + getProv(station)).toLowerCase();
             item.addEventListener('click', (e) => {
                 e.stopPropagation();
-                elDropdownSelectedText.innerText = formatCity(station.kota);
-                fetchWeather(station.id);
+                const label = `${formatCity(station.kota)}, ${formatProv(getProv(station))}`;
+                elDropdownSelectedText.innerText = label;
+                fetchWeather(station.lat, station.lon);
+                localStorage.setItem('bmkg_lat', station.lat);
+                localStorage.setItem('bmkg_lon', station.lon);
+                localStorage.setItem('bmkg_station_label', label);
                 elDropdown.classList.remove('active');
                 document.querySelectorAll('.dropdown-item').forEach(el => el.classList.remove('active'));
                 item.classList.add('active');
             });
             elDropdownItemsContainer.appendChild(item);
         });
+
         elDropdownSearch.addEventListener('click', (e) => e.stopPropagation());
         elDropdownSearch.addEventListener('input', (e) => {
             const query = e.target.value.toLowerCase();
@@ -446,7 +481,9 @@ async function initBMKG() {
                 item.style.display = match ? 'flex' : 'none';
             });
         });
-        if (navigator.geolocation) {
+
+        // LANGKAH 3: Hanya jalankan geolokasi jika belum ada cache
+        if (!savedLat && navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
                     const userLat = pos.coords.latitude;
@@ -455,19 +492,24 @@ async function initBMKG() {
                     let jarakMin = Infinity;
                     bmkgStations.forEach(st => {
                         const d = getDistanceFromLatLonInKm(userLat, userLon, parseFloat(st.lat), parseFloat(st.lon));
-                        if (d < jarakMin) {
-                            jarakMin = d;
-                            terdekat = st;
-                        }
+                        if (d < jarakMin) { jarakMin = d; terdekat = st; }
                     });
-                    elDropdownSelectedText.innerText = `${formatCity(terdekat.kota)}, ${formatProv(terdekat.propinsi)}`;
-                    fetchWeather(terdekat.id);
+                    const label = `${formatCity(terdekat.kota)}, ${formatProv(getProv(terdekat))}`;
+                    elDropdownSelectedText.innerText = label;
+                    fetchWeather(terdekat.lat, terdekat.lon);
+                    localStorage.setItem('bmkg_lat', terdekat.lat);
+                    localStorage.setItem('bmkg_lon', terdekat.lon);
+                    localStorage.setItem('bmkg_station_label', label);
                 },
-                (err) => {
-                    elDropdownSelectedText.innerText = "Jakarta Pusat";
-                    fetchWeather("501233");
+                () => {
+                    // Fallback: Yogyakarta koordinat
+                    elDropdownSelectedText.innerText = 'Yogyakarta';
+                    fetchWeather(-7.7956, 110.3695);
                 }
             );
+        } else if (!savedLat) {
+            elDropdownSelectedText.innerText = 'Yogyakarta';
+            fetchWeather(-7.7956, 110.3695);
         }
     } catch (err) {
         console.error(err);
