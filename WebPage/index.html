@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Smart Gateway</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,600,1,0" />
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-top">
+                <div class="sidebar-brand">
+                    <div class="brand-logo">
+                        <span class="material-symbols-rounded">psychiatry</span>
+                    </div>
+                    <h1 class="brand-text">Renterra</h1>
+                </div>
+                <div class="sidebar-divider"></div>
+                <nav class="sidebar-nav">
+                    <a href="#" class="nav-item active">
+                        <span class="material-symbols-rounded">dashboard</span>
+                        <span class="nav-label">Dashboard</span>
+                    </a>
+                    <a href="#" class="nav-item">
+                        <span class="material-symbols-rounded">monitoring</span>
+                        <span class="nav-label">Monitoring</span>
+                    </a>
+                    <a href="#" class="nav-item">
+                        <span class="material-symbols-rounded">history</span>
+                        <span class="nav-label">Riwayat</span>
+                    </a>
+                    <a href="#" class="nav-item">
+                        <span class="material-symbols-rounded">settings</span>
+                        <span class="nav-label">Pengaturan</span>
+                    </a>
+                </nav>
+            </div>
+            <div class="sidebar-bottom">
+                <div class="sidebar-divider"></div>
+                <div class="user-profile neumorph-profile-inset">
+                    <div class="avatar">
+                        <span class="material-symbols-rounded">person</span>
+                    </div>
+                    <span class="user-name">Hyprlan</span>
+                </div>
+            </div>
+        </aside>
+        <div class="dashboard-wrapper">
+            <header class="neumorph-header">
+                <div class="header-left">
+                    <div class="header-title">
+                        <h1>Renterra Dashboard</h1>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="location-picker neumorph-pill-inset custom-dropdown" id="custom_dropdown">
+                        <span class="material-symbols-rounded icon-accent">location_on</span>
+                        <div class="dropdown-selected" id="location_selected_text">Deteksi Otomatis...</div>
+                        <span class="material-symbols-rounded icon-accent dropdown-arrow">expand_more</span>
+                        <div class="dropdown-list" id="location_list">
+                            <div class="dropdown-search-wrapper">
+                                <span class="material-symbols-rounded">search</span>
+                                <input type="text" id="location_search" class="dropdown-search" placeholder="Cari kota..." autocomplete="off">
+                            </div>
+                            <div class="dropdown-items-container" id="location_items">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="system-status">
+                        <div class="neumorph-pill-inset status-pill">
+                            <span class="material-symbols-rounded icon-accent">battery_charging_full</span>
+                            <span id="baterai" class="status-text">--</span><span class="unit">%</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <main class="bento-grid">
+                <div class="bento-card span-3 ai-card">
+                    <div class="card-header">
+                        <span class="material-symbols-rounded icon-accent">psychology</span>
+                        <h3>AI AGRI-INSIGHT</h3>
+                        <span class="badge">Local LLM</span>
+                    </div>
+                    <div class="ai-text" id="ai_insight">
+                        Menganalisis data lingkungan secara real-time...
+                    </div>
+                </div>
+                <div class="bento-card row-span-2 weather-card">
+                    <div class="card-header">
+                        <span class="material-symbols-rounded icon-accent">partly_cloudy_day</span>
+                        <h3>PRAKIRAAN BMKG</h3>
+                    </div>
+                    <div class="weather-content" id="bmkg_content">
+                        <span class="material-symbols-rounded giant-icon" id="bmkg_icon">sync</span>
+                        <div class="value-wrapper">
+                            <span class="value" id="bmkg_temp">--</span><span class="unit">°C</span>
+                        </div>
+                        <p class="weather-status-text" id="bmkg_status">Memuat data...</p>
+                        <p class="weather-time-text" id="bmkg_time">--:--</p>
+                    </div>
+                </div>
+                <div class="bento-card compact-card">
+                    <div class="card-header-compact">
+                        <span class="material-symbols-rounded icon-accent">device_thermostat</span>
+                        <h3>SUHU</h3>
+                    </div>
+                    <div class="value-wrapper">
+                        <span class="value" id="suhu">--</span>
+                        <span class="unit">°C</span>
+                    </div>
+                </div>
+                <div class="bento-card compact-card">
+                    <div class="card-header-compact">
+                        <span class="material-symbols-rounded icon-accent">water_drop</span>
+                        <h3>KELEMBAPAN</h3>
+                    </div>
+                    <div class="value-wrapper">
+                        <span class="value" id="kelembapan">--</span>
+                        <span class="unit">%</span>
+                    </div>
+                </div>
+                <div class="bento-card compact-card">
+                    <div class="card-header-compact">
+                        <span class="material-symbols-rounded icon-accent">grass</span>
+                        <h3>ADC TANAH</h3>
+                    </div>
+                    <div class="value-wrapper">
+                        <span class="value" id="adc_tanah">----</span>
+                        <div class="status-badge" id="status_tanah">Wait...</div>
+                    </div>
+                </div>
+                <div class="bento-card span-4 giant-layout">
+                    <div class="card-header">
+                        <span class="material-symbols-rounded icon-accent">area_chart</span>
+                        <h3>GRAFIK HISTORIS (MAIN LAYOUT)</h3>
+                    </div>
+                    <div class="giant-content-placeholder">
+                        <div class="placeholder-graphic">
+                            <span class="material-symbols-rounded placeholder-icon">insert_chart</span>
+                            <p>Area Layout Utama siap diintegrasikan dengan Firebase Historical Data</p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    <script type="module" src="app.js"></script>
+</body>
+</html>

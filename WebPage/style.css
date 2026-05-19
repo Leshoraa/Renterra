@@ -1,0 +1,491 @@
+:root {
+    --bg-color: #ECF0F3;
+    --text-main: #334155;
+    --text-muted: #64748b;
+    --shadow-light: #FFFFFF;
+    --shadow-dark: #c8d2e0;
+    --accent: #00b894;
+    --info: #0984e3;
+    --danger: #d63031;
+    
+    /* Nilai universal untuk card bento biasa */
+    --shadow-out: 8px 8px 22px var(--shadow-dark), -10px -10px 22px var(--shadow-light);
+    --shadow-nav-out: 5px 5px 14px var(--shadow-dark), -6px -6px 16px var(--shadow-light);
+    --shadow-in: inset 3px 3px 6px var(--shadow-dark), inset -4px -4px 5px var(--shadow-light);
+    --shadow-in-sm: inset 4px 3px 5px var(--shadow-dark), inset -4px -3px 5px var(--shadow-light);
+    
+    --radius-sm: 12px;
+    --radius-md: 18px;
+    --radius-lg: 24px;
+}
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    overflow: hidden;
+}
+.app-container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    background-color: var(--bg-color);
+}
+.sidebar {
+    flex-shrink: 0;
+    width: 280px;
+    height: calc(100vh - 64px);
+    margin: 32px 0 32px 32px;
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 32px 28px;
+    background: var(--bg-color);
+    z-index: 10;
+    
+    box-shadow: 5px 5px 14px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
+}
+.sidebar-top {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 32px;
+}
+.brand-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-main);
+}
+.brand-logo .material-symbols-rounded {
+    font-size: 2.2rem;
+    font-weight: 700;
+}
+.brand-text {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--text-main);
+    letter-spacing: -0.5px;
+}
+.sidebar-divider {
+    width: 100%;
+    height: 1px;
+    border-bottom: 2px dashed rgba(100, 116, 139, 0.2);
+    margin: 16px 0;
+}
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 10px;
+}
+.nav-item {
+    width: 100%;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+.nav-item .material-symbols-rounded {
+    font-size: 1.3rem;
+}
+.nav-item:not(.active):hover {
+    color: var(--text-main);
+    background: rgba(200, 210, 224, 0.2);
+}
+.nav-item.active {
+    color: var(--text-main);
+    background: var(--bg-color);
+    box-shadow: var(--shadow-nav-out);
+}
+.sidebar-bottom {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px 8px 8px;
+    cursor: pointer;
+}
+.avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--bg-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--text-main);
+}
+.user-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--text-main);
+}
+.dashboard-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    padding: 32px 40px;
+    overflow-y: auto;
+}
+.dashboard-wrapper::-webkit-scrollbar {
+    width: 6px;
+}
+.dashboard-wrapper::-webkit-scrollbar-track {
+    background: transparent;
+}
+.dashboard-wrapper::-webkit-scrollbar-thumb {
+    background: var(--shadow-dark);
+    border-radius: 10px;
+}
+.bento-card {
+    background: var(--bg-color);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    
+    /* Menggunakan nilai universal default */
+    box-shadow: var(--shadow-out);
+}
+.neumorph-card-inset {
+    background: var(--bg-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-in);
+}
+.neumorph-pill-inset {
+    background: var(--bg-color);
+    box-shadow: var(--shadow-in);
+    border-radius: var(--radius-sm);
+}
+
+.neumorph-profile-inset {
+    background: var(--bg-color);
+    box-shadow: var(--shadow-nav-out);
+    border-radius: 14px;
+}
+.neumorph-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0;
+    margin-bottom: 8px;
+}
+.header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.greeting {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-top: 5px;
+    letter-spacing: 1.5px;
+}
+h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+.system-status {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+}
+.status-pill {
+    padding: 8px 16px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+.status-text {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+.location-picker {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+}
+.custom-dropdown {
+    position: relative;
+    cursor: pointer;
+    min-width: 180px;
+    max-width: 250px;
+    justify-content: space-between;
+    user-select: none;
+}
+.dropdown-selected {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.dropdown-arrow {
+    font-size: 1.2rem;
+    transition: transform 0.2s ease;
+}
+.custom-dropdown.active .dropdown-arrow {
+    transform: rotate(180deg);
+}
+.dropdown-list {
+    position: absolute;
+    top: 115%;
+    right: 0;
+    width: max-content;
+    min-width: 100%;
+    background: var(--bg-color);
+    box-shadow: var(--shadow-out);
+    border-radius: var(--radius-md);
+    display: none;
+    flex-direction: column;
+    z-index: 100;
+    padding: 12px;
+}
+.custom-dropdown.active .dropdown-list {
+    display: flex;
+}
+.dropdown-search-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    background: var(--bg-color);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-in);
+}
+.dropdown-search-wrapper .material-symbols-rounded {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+}
+.dropdown-search {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.85rem;
+    color: var(--text-main);
+    width: 100%;
+}
+.dropdown-items-container {
+    display: flex;
+    flex-direction: column;
+    max-height: 200px;
+    overflow-y: auto;
+    padding-right: 4px;
+    gap: 2px;
+}
+.dropdown-item {
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.dropdown-item:hover,
+.dropdown-item.active {
+    background: var(--bg-color);
+    box-shadow: var(--shadow-in);
+    color: var(--info);
+}
+.dropdown-items-container::-webkit-scrollbar {
+    width: 6px;
+}
+.dropdown-items-container::-webkit-scrollbar-thumb {
+    background: var(--shadow-dark);
+    border-radius: 10px;
+}
+.bento-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: minmax(130px, auto);
+    gap: 32px;
+    padding-bottom: 32px;
+}
+.span-2 {
+    grid-column: span 2;
+}
+.span-3 {
+    grid-column: span 3;
+}
+.span-4 {
+    grid-column: span 4;
+}
+.row-span-2 {
+    grid-row: span 2;
+}
+.card-header,
+.card-header-compact {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+.icon-accent {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+}
+h3 {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+.badge {
+    margin-left: auto;
+    font-size: 0.65rem;
+    padding: 6px 12px;
+    border-radius: 20px;
+    background: var(--bg-color);
+    box-shadow: var(--shadow-in-sm);
+    color: var(--text-muted);
+    font-weight: 600;
+}
+.value-wrapper {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+}
+.value {
+    font-size: 2.1rem;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1.2;
+}
+.unit {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+.ai-text {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-main);
+    line-height: 2.2;
+}
+.ai-text strong {
+    font-weight: 700;
+    color: var(--accent);
+}
+.ai-text code {
+    font-weight: 700;
+    color: var(--info);
+}
+.compact-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.status-badge {
+    margin-left: 10px;
+    padding: 6px 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    background: var(--bg-color);
+    border-radius: 50px;
+    box-shadow: var(--shadow-in-sm);
+}
+.weather-card {
+    display: flex;
+    flex-direction: column;
+}
+.weather-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    gap: 10px;
+}
+.giant-icon {
+    font-size: 3.2rem;
+    color: var(--text-muted);
+}
+.weather-status-text {
+    font-weight: 600;
+    font-size: 1.05rem;
+    text-align: center;
+}
+.weather-time-text {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+.giant-layout {
+    min-height: 350px;
+    display: flex;
+    flex-direction: column;
+}
+.giant-content-placeholder {
+    flex: 1;
+    border-radius: var(--radius-md);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 12px;
+    background: var(--bg-color);
+    
+    /* 2. PERBAIKAN SHADOW GRAFIK HISTORI: Diperdalam agar cekungan terlihat dalam */
+    box-shadow: inset 10px 10px 14px var(--shadow-dark), inset -10px -10px 22px var(--shadow-light);
+}
+.placeholder-graphic {
+    text-align: center;
+    color: var(--text-muted);
+}
+.placeholder-icon {
+    font-size: 3rem;
+    margin-bottom: 10px;
+    opacity: 0.5;
+}
+@media (max-width: 1024px) {
+    .bento-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .span-3,
+    .span-4 {
+        grid-column: span 2;
+    }
+    .neumorph-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+    }
+    .header-right {
+        flex-wrap: wrap;
+    }
+}
