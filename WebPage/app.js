@@ -276,28 +276,7 @@ function generateAgriInsight(suhu, kelembapan, adcTanah) {
     return "Kondisi **stabil**. Lanjutkan pemantauan rutin.";
 }
 
-const initialQuery = query(ref(db, 'SensorHistory'), limitToLast(15));
-get(initialQuery).then(snapshot => {
-    if (snapshot.exists()) {
-        const rawData = snapshot.val();
-        Object.values(rawData).sort((a, b) => a.timestamp - b.timestamp).forEach(entry => {
-            if (!entry.timestamp) return;
-            const date = new Date(entry.timestamp);
-            const timeLabel = date.getHours().toString().padStart(2, '0') + ':' +
-                date.getMinutes().toString().padStart(2, '0') + ':' +
-                date.getSeconds().toString().padStart(2, '0');
-            realTimeBuffer.push({
-                label: timeLabel,
-                suhu: entry.suhu !== undefined ? entry.suhu : null,
-                kel: entry.kelembapan !== undefined ? entry.kelembapan : null,
-                tanah: entry.adc_tanah !== undefined ? entry.adc_tanah : null
-            });
-        });
-        if (currentChartMode === 'realtime' || currentChartMode === 'live') {
-            updateChartWithQueue(realTimeBuffer, 15);
-        }
-    }
-});
+let isFirstLoad = true;
 
 onValue(sensorRef, (snapshot) => {
     const data = snapshot.val();
@@ -342,16 +321,37 @@ onValue(sensorRef, (snapshot) => {
 
         if (data.suhu !== undefined && data.kelembapan !== undefined && data.adc_tanah !== undefined) {
             const now = new Date();
-            const timeLabel = now.getHours().toString().padStart(2, '0') + ':' +
-                now.getMinutes().toString().padStart(2, '0') + ':' +
-                now.getSeconds().toString().padStart(2, '0');
 
-            realTimeBuffer.push({
-                label: timeLabel,
-                suhu: data.suhu,
-                kel: data.kelembapan,
-                tanah: data.adc_tanah
-            });
+            if (isFirstLoad && data.live_buffer) {
+                isFirstLoad = false;
+                const points = data.live_buffer.split('|').filter(p => p.length > 0);
+                realTimeBuffer = [];
+                for (let i = 0; i < points.length; i++) {
+                    const parts = points[i].split(',');
+                    const pointTime = new Date(now.getTime() - (points.length - 1 - i) * 1000);
+                    const timeLabel = pointTime.getHours().toString().padStart(2, '0') + ':' +
+                        pointTime.getMinutes().toString().padStart(2, '0') + ':' +
+                        pointTime.getSeconds().toString().padStart(2, '0');
+
+                    realTimeBuffer.push({
+                        label: timeLabel,
+                        suhu: parseFloat(parts[0]),
+                        kel: parseFloat(parts[1]),
+                        tanah: parseInt(parts[2])
+                    });
+                }
+            } else {
+                const timeLabel = now.getHours().toString().padStart(2, '0') + ':' +
+                    now.getMinutes().toString().padStart(2, '0') + ':' +
+                    now.getSeconds().toString().padStart(2, '0');
+
+                realTimeBuffer.push({
+                    label: timeLabel,
+                    suhu: data.suhu,
+                    kel: data.kelembapan,
+                    tanah: data.adc_tanah
+                });
+            }
 
             if (realTimeBuffer.length > 50) {
                 realTimeBuffer.shift();

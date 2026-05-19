@@ -35,11 +35,21 @@ FirebaseJson historyJson; // Tambahan untuk memori history
 
 uint8_t gardenMac[6];
 
+// Buffer untuk 15 detik terakhir agar Real-time Chart web terisi penuh saat reload
+#define MAX_LIVE_POINTS 15
+float liveSuhu[MAX_LIVE_POINTS];
+float liveKel[MAX_LIVE_POINTS];
+int liveTanah[MAX_LIVE_POINTS];
+int liveIndex = 0;
+int liveCount = 0;
+
 volatile bool newDataReady = false;
 volatile bool needReply = false;
 
 int currentUpdateInterval = 15;
 unsigned long lastFbCheck = 0;
+unsigned long lastHistoryPush = 0;
+const unsigned long HISTORY_INTERVAL = 300000; // 5 Menit dalam milidetik
 
 portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;
 
@@ -146,6 +156,20 @@ void loop() {
     Serial.print("Baterai: "); Serial.println(myData.batteryPercentage);
 
     if (Firebase.ready()) {
+      // Simpan 15 titik terakhir di memori ESP32
+      liveSuhu[liveIndex] = myData.temperature;
+      liveKel[liveIndex] = myData.humidity;
+      liveTanah[liveIndex] = myData.rawSoil;
+      liveIndex = (liveIndex + 1) % MAX_LIVE_POINTS;
+      if (liveCount < MAX_LIVE_POINTS) liveCount++;
+
+      String liveStr = "";
+      for (int i = 0; i < liveCount; i++) {
+        int idx = (liveIndex - liveCount + i + MAX_LIVE_POINTS) % MAX_LIVE_POINTS;
+        liveStr += String(liveSuhu[idx], 1) + "," + String(liveKel[idx], 1) + "," + String(liveTanah[idx]);
+        if (i < liveCount - 1) liveStr += "|";
+      }
+
       // 1. UPDATE DATA REAL-TIME (Tiban/Overwrite)
       json.clear();
       json.set("suhu", myData.temperature);
@@ -153,20 +177,25 @@ void loop() {
       json.set("adc_tanah", myData.rawSoil);
       json.set("adc_hujan", myData.rawRain);
       json.set("baterai_persen", myData.batteryPercentage);
+      json.set("live_buffer", liveStr);
 
       Firebase.RTDB.updateNode(&fbdo, "/SensorKebun", &json);
       Firebase.RTDB.setTimestamp(&fbdo, "/SensorKebun/last_update");
       
-      // 2. PUSH DATA HISTORIS (Numpuk ke bawah)
-      historyJson.clear();
-      historyJson.set("suhu", myData.temperature);
-      historyJson.set("kelembapan", myData.humidity);
-      historyJson.set("adc_tanah", myData.rawSoil);
-      historyJson.set("timestamp/.sv", "timestamp"); // Otomatis catat waktu server Firebase
-      
-      Firebase.RTDB.pushJSON(&fbdo, "/SensorHistory", &historyJson);
-
-      Serial.println("[FIREBASE] Upload Status & History OK");
+      // 2. PUSH DATA HISTORIS (Dibatasi per 5 menit agar DB tidak penuh)
+      if (millis() - lastHistoryPush >= HISTORY_INTERVAL || lastHistoryPush == 0) {
+        historyJson.clear();
+        historyJson.set("suhu", myData.temperature);
+        historyJson.set("kelembapan", myData.humidity);
+        historyJson.set("adc_tanah", myData.rawSoil);
+        historyJson.set("timestamp/.sv", "timestamp"); // Otomatis catat waktu server Firebase
+        
+        Firebase.RTDB.pushJSON(&fbdo, "/SensorHistory", &historyJson);
+        lastHistoryPush = millis();
+        Serial.println("[FIREBASE] Update Real-time & Push History OK");
+      } else {
+        Serial.println("[FIREBASE] Update Real-time OK (History Skipped)");
+      }
     }
   }
 
