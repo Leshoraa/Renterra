@@ -466,12 +466,23 @@ h3 {
 .placeholder-graphic {
     text-align: center;
     color: var(--text-muted);
+    padding: 0 24px; /* Prevent text from overflowing inner shadow on small screens */
 }
 .placeholder-icon {
     font-size: 3rem;
     margin-bottom: 10px;
     opacity: 0.5;
 }
+/* Wrapper untuk sensor cards (default grid di desktop) */
+.sensor-cards-wrapper {
+    display: contents;
+}
+
+/* Base style untuk bottom navbar (hidden di desktop) */
+.bottom-nav {
+    display: none;
+}
+
 @media (max-width: 1024px) {
     .bento-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -487,5 +498,167 @@ h3 {
     }
     .header-right {
         flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 768px) {
+    .app-container {
+        flex-direction: column;
+    }
+    .sidebar {
+        display: none;
+    }
+    
+    /* Bottom Navigation Layout */
+    .dashboard-wrapper {
+        padding: 20px 12px 90px 12px; /* Mengurangi padding agar layout lebih lebar (panjang secara horizontal) */
+        gap: 20px;
+        height: 100vh;
+    }
+    .bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: var(--bg-color);
+        box-shadow: 0 -5px 15px rgba(200, 210, 224, 0.4);
+        z-index: 100;
+        padding: 12px 24px;
+        justify-content: space-between;
+        align-items: center;
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    }
+    .bottom-nav .nav-item {
+        flex-direction: column;
+        gap: 4px;
+        padding: 8px 16px;
+        font-size: 0.75rem;
+        width: auto;
+    }
+    .bottom-nav .nav-item .material-symbols-rounded {
+        font-size: 1.5rem;
+    }
+    .bottom-nav .nav-item.active {
+        background: var(--bg-color);
+        box-shadow: var(--shadow-nav-out);
+    }
+    
+    /* Header (Title, Location, Battery) */
+    .neumorph-header {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+    }
+    .header-left {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+    .header-left h1 {
+        font-size: 1.5rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .hide-on-mobile {
+        display: none;
+    }
+    .header-right {
+        flex: 0 0 auto;
+        display: flex;
+        gap: 8px;
+        width: auto;
+    }
+    .location-picker {
+        min-width: auto;
+        max-width: 130px;
+        padding: 6px 10px;
+    }
+    .location-picker .dropdown-selected {
+        font-size: 0.75rem;
+    }
+    .location-picker .dropdown-arrow {
+        font-size: 1rem;
+    }
+    .status-pill {
+        padding: 6px 10px;
+    }
+    .status-pill .status-text,
+    .status-pill .unit {
+        font-size: 0.8rem;
+    }
+    .status-pill .material-symbols-rounded {
+        font-size: 1.1rem;
+    }
+    
+    /* Grid Layout & Horizontal Scroll */
+    .bento-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        padding-bottom: 20px;
+    }
+    
+    /* Sensor Cards - Scrollable */
+    .sensor-cards-wrapper {
+        display: flex;
+        overflow-x: auto;
+        gap: 16px;
+        padding-top: 16px;
+        padding-bottom: 24px;
+        order: 1;
+        width: auto;
+        margin-left: -12px;
+        margin-right: -12px;
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+    .sensor-cards-wrapper::-webkit-scrollbar {
+        height: 4px;
+        display: none; /* Hide scrollbar on mobile for cleaner look */
+    }
+    .sensor-cards-wrapper {
+        scrollbar-width: none; /* Firefox */
+    }
+    .sensor-cards-wrapper .bento-card {
+        flex: 0 0 220px; /* Diperpanjang secara signifikan */
+        min-width: 260px;
+        padding: 16px;
+    }
+    .sensor-cards-wrapper .value {
+        font-size: 1.6rem;
+    }
+    
+    /* Weather Card - Order 2 */
+    .weather-card {
+        order: 2;
+        padding: 20px;
+    }
+    
+    /* AI Card - Order 0 (Right below header) */
+    .ai-card {
+        order: 0;
+        padding: 20px;
+    }
+    .ai-text {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .ai-text.expanded {
+        -webkit-line-clamp: unset;
+    }
+    
+    /* Giant Layout - Order 4 */
+    .giant-layout {
+        order: 4;
+        min-height: 250px;
+        padding: 20px;
     }
 }

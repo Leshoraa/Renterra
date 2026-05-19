@@ -54,7 +54,7 @@
             <header class="neumorph-header">
                 <div class="header-left">
                     <div class="header-title">
-                        <h1>Renterra Dashboard</h1>
+                        <h1>Renterra <span class="hide-on-mobile">Dashboard</span></h1>
                     </div>
                 </div>
                 <div class="header-right">
@@ -104,34 +104,36 @@
                         <p class="weather-time-text" id="bmkg_time">--:--</p>
                     </div>
                 </div>
-                <div class="bento-card compact-card">
-                    <div class="card-header-compact">
-                        <span class="material-symbols-rounded icon-accent">device_thermostat</span>
-                        <h3>SUHU</h3>
+                <div class="sensor-cards-wrapper">
+                    <div class="bento-card compact-card">
+                        <div class="card-header-compact">
+                            <span class="material-symbols-rounded icon-accent">device_thermostat</span>
+                            <h3>SUHU</h3>
+                        </div>
+                        <div class="value-wrapper">
+                            <span class="value" id="suhu">--</span>
+                            <span class="unit">°C</span>
+                        </div>
                     </div>
-                    <div class="value-wrapper">
-                        <span class="value" id="suhu">--</span>
-                        <span class="unit">°C</span>
+                    <div class="bento-card compact-card">
+                        <div class="card-header-compact">
+                            <span class="material-symbols-rounded icon-accent">water_drop</span>
+                            <h3>KELEMBAPAN</h3>
+                        </div>
+                        <div class="value-wrapper">
+                            <span class="value" id="kelembapan">--</span>
+                            <span class="unit">%</span>
+                        </div>
                     </div>
-                </div>
-                <div class="bento-card compact-card">
-                    <div class="card-header-compact">
-                        <span class="material-symbols-rounded icon-accent">water_drop</span>
-                        <h3>KELEMBAPAN</h3>
-                    </div>
-                    <div class="value-wrapper">
-                        <span class="value" id="kelembapan">--</span>
-                        <span class="unit">%</span>
-                    </div>
-                </div>
-                <div class="bento-card compact-card">
-                    <div class="card-header-compact">
-                        <span class="material-symbols-rounded icon-accent">grass</span>
-                        <h3>ADC TANAH</h3>
-                    </div>
-                    <div class="value-wrapper">
-                        <span class="value" id="adc_tanah">----</span>
-                        <div class="status-badge" id="status_tanah">Wait...</div>
+                    <div class="bento-card compact-card">
+                        <div class="card-header-compact">
+                            <span class="material-symbols-rounded icon-accent">grass</span>
+                            <h3>ADC TANAH</h3>
+                        </div>
+                        <div class="value-wrapper">
+                            <span class="value" id="adc_tanah">----</span>
+                            <div class="status-badge" id="status_tanah">Wait...</div>
+                        </div>
                     </div>
                 </div>
                 <div class="bento-card span-4 giant-layout">
@@ -148,6 +150,24 @@
                 </div>
             </main>
         </div>
+        <nav class="bottom-nav">
+            <a href="#" class="nav-item active">
+                <span class="material-symbols-rounded">dashboard</span>
+                <span class="nav-label">Dashboard</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span class="material-symbols-rounded">monitoring</span>
+                <span class="nav-label">Monitoring</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span class="material-symbols-rounded">history</span>
+                <span class="nav-label">Riwayat</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span class="material-symbols-rounded">settings</span>
+                <span class="nav-label">Pengaturan</span>
+            </a>
+        </nav>
     </div>
     <script type="module" src="app.js"></script>
 </body>

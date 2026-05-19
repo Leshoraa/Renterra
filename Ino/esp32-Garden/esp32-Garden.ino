@@ -9,7 +9,7 @@
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 32
-#define OLED_RESET    -1
+#define OLED_RESET -1
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 #define DHTPIN 15
@@ -17,12 +17,12 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 DHT dht(DHTPIN, DHTTYPE);
 
 const int pinSoilMoisture = 35; 
-const int pinRaindrop = 34;     
+const int pinRaindrop = 34;
 const int pinBattery = 32;
 
 const int btn1 = 26; 
 const int btn2 = 27; 
-const int btn3 = 13; 
+const int btn3 = 13;
 const int btn4 = 14; 
 
 RTC_DATA_ATTR int currentMenu = 1; 
@@ -87,8 +87,7 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
 
 void sendData() {
   WiFi.mode(WIFI_STA);
-  esp_wifi_set_channel(3, WIFI_SECOND_CHAN_NONE);
-  delay(100); 
+  delay(100);
   
   if (esp_now_init() != ESP_OK) {
     Serial.println("[ESP-NOW] Gagal Inisialisasi!");
@@ -99,9 +98,8 @@ void sendData() {
   
   esp_now_peer_info_t peerInfo;
   memset(&peerInfo, 0, sizeof(peerInfo));
-  
   memcpy(peerInfo.peer_addr, broadcastAddress, 6);
-  peerInfo.channel = 3;  
+  peerInfo.channel = 0;  
   peerInfo.encrypt = false;
   
   if (esp_now_add_peer(&peerInfo) != ESP_OK) {
@@ -115,8 +113,8 @@ void sendData() {
   packet.rawSoil = analogRead(pinSoilMoisture);
   packet.rawRain = analogRead(pinRaindrop);
   packet.batteryPercentage = readBattery();
-
-  Serial.println("[ESP-NOW] Mengirim data*...");
+  
+  Serial.printf("[ESP-NOW] Mengirim data: Suhu: %.1f, Lembap: %.1f\n", packet.temperature, packet.humidity);
   esp_now_send(broadcastAddress, (uint8_t *) &packet, sizeof(packet));
   
   delay(500); 
@@ -126,21 +124,31 @@ void sendData() {
 }
 
 void setup() {
+  Serial.begin(115200);
+  delay(500);
+
   setCpuFrequencyMhz(80);
   WiFi.mode(WIFI_OFF);
   btStop();
 
   analogReadResolution(12);
   dht.begin();
-
+  
   esp_sleep_wakeup_cause_t wakeup_reason = esp_sleep_get_wakeup_cause();
 
-  if (wakeup_reason == ESP_SLEEP_WAKEUP_TIMER) {
-    sendData();
-    silentDeepSleep(); 
+  if (wakeup_reason == ESP_SLEEP_WAKEUP_EXT0) {
+      Serial.println("Bangun karena tombol ditekan, tunggu tombol dilepas...");
+      while(digitalRead(btn1) == LOW) { delay(10); } 
+      Serial.println("Tombol dilepas, lanjut ke program.");
   }
 
-  Serial.begin(115200);
+  if (wakeup_reason == ESP_SLEEP_WAKEUP_TIMER) {
+    Serial.println("\n[WAKEUP] Bangun dari Deep Sleep! Mempersiapkan pengiriman...");
+    delay(2000); 
+    sendData();
+    Serial.println("[WAKEUP] Tugas selesai, kembali tidur pejamkan mata...");
+    silentDeepSleep(); 
+  }
 
   pinMode(btn1, INPUT_PULLUP);
   pinMode(btn2, INPUT_PULLUP);
@@ -153,7 +161,6 @@ void setup() {
   
   display.ssd1306_command(SSD1306_DISPLAYON);
   display.setRotation(2);
-  
   display.clearDisplay();
   display.setTextColor(SSD1306_WHITE);
   
@@ -175,13 +182,13 @@ void loop() {
   static unsigned long lastSerialPrint = 0;
   if (millis() - lastSerialPrint > 2000) {
     printToSerial();
-    updateDisplay(); 
+    updateDisplay();
     lastSerialPrint = millis();
   }
 
   if (millis() - startAwakeMillis >= AWAKE_DURATION) {
     sendData();
-    enterDeepSleep(); 
+    enterDeepSleep();
   }
 }
 
@@ -207,7 +214,7 @@ void checkButtons() {
       
       delay(1500); 
       
-      ESP.restart(); 
+      ESP.restart();
     }
   }
   
@@ -249,7 +256,7 @@ void updateDisplay() {
   display.clearDisplay();
   display.setCursor(0, 0);
   display.setTextSize(1);
-
+  
   float t = dht.readTemperature();
   float h = dht.readHumidity();
   int rawSoil = analogRead(pinSoilMoisture);
@@ -266,7 +273,8 @@ void updateDisplay() {
         display.println("Gagal baca DHT!");
       } else {
         display.print("Suhu : "); display.print(t, 1); display.println(" C");
-        display.print("Lembap: "); display.print(h, 1); display.println(" %");
+        display.print("Lembap: ");
+        display.print(h, 1); display.println(" %");
       }
       break;
 
@@ -305,7 +313,6 @@ void updateDisplay() {
       display.setCursor(98, 0);
       display.print(batteryPercentage);
       display.println("%");
-      
       if (rawRain <= 2000) {
         display.println("Siram: JANGAN (Hujan)");
       } else if (rawSoil > 3000) {

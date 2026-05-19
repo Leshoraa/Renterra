@@ -11,6 +11,9 @@ const elAdcTanah = document.getElementById("adc_tanah");
 const elBaterai = document.getElementById("baterai");
 const elStatusTanah = document.getElementById("status_tanah");
 const elAiInsight = document.getElementById("ai_insight");
+elAiInsight.addEventListener('click', () => {
+    elAiInsight.classList.toggle('expanded');
+});
 
 const elDropdown = document.getElementById("custom_dropdown");
 const elDropdownSelectedText = document.getElementById("location_selected_text");
