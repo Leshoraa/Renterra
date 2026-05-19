@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, query, limitToLast, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-import firebaseConfig from './config.js';
+import { getDatabase, ref, query, limitToLast, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { firebaseConfig } from './config.js';
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
@@ -13,33 +13,34 @@ const avgHumEl = document.getElementById('avg_hum');
 
 let globalData = [];
 
-// Fetch History Data (Max 200 records for the table to optimize RAM)
-const historyQuery = query(ref(db, 'SensorHistory'), limitToLast(200));
+// limitToLast mengambil 100 data terbaru berdasarkan Push ID (sudah kronologis)
+const historyQuery = query(ref(db, 'SensorHistory'), limitToLast(100));
 
-onValue(historyQuery, (snapshot) => {
+badge.innerText = "Memuat...";
+
+get(historyQuery).then((snapshot) => {
     globalData = [];
     if (snapshot.exists()) {
         const rawData = snapshot.val();
         let html = '';
         let sumTemp = 0, sumHum = 0, validCount = 0;
         
-        // Sort descending (newest first)
-        const entries = Object.values(rawData).sort((a, b) => b.timestamp - a.timestamp);
+        // Push ID sudah urut waktu — reverse untuk tampilan newest-first
+        const entries = Object.values(rawData).reverse();
         
         entries.forEach(entry => {
-            if (!entry.timestamp) return;
             globalData.push(entry);
             
-            const date = new Date(entry.timestamp);
+            const date = entry.timestamp ? new Date(entry.timestamp) : new Date();
             const timeStr = date.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
             
-            const t = entry.suhu !== undefined ? entry.suhu.toFixed(1) : '--';
-            const h = entry.kelembapan !== undefined ? entry.kelembapan.toFixed(1) : '--';
+            const t = entry.suhu !== undefined ? Number(entry.suhu).toFixed(1) : '--';
+            const h = entry.kelembapan !== undefined ? Number(entry.kelembapan).toFixed(1) : '--';
             const s = entry.adc_tanah !== undefined ? entry.adc_tanah : '--';
             
-            if (entry.suhu !== undefined) { 
-                sumTemp += entry.suhu; 
-                sumHum += entry.kelembapan; 
+            if (entry.suhu !== undefined && entry.kelembapan !== undefined) { 
+                sumTemp += Number(entry.suhu); 
+                sumHum += Number(entry.kelembapan); 
                 validCount++; 
             }
 
@@ -57,19 +58,17 @@ onValue(historyQuery, (snapshot) => {
         badge.innerText = `${entries.length} Records`;
         
         if (validCount > 0) {
-            avgTempEl.innerText = (sumTemp / validCount).toFixed(1) + " °C";
+            avgTempEl.innerText = (sumTemp / validCount).toFixed(1) + " \u00b0C";
             avgHumEl.innerText = (sumHum / validCount).toFixed(1) + " %";
         }
     } else {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: var(--text-muted);">Riwayat kosong. Menunggu siklus simpan ESP32 (5 Menit)...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: var(--text-muted);">Riwayat kosong. ESP32 menyimpan riwayat setiap 5 menit.</td></tr>';
         badge.innerText = "0 Records";
-        avgTempEl.innerText = "-- °C";
-        avgHumEl.innerText = "-- %";
     }
-}, (err) => {
+}).catch(err => {
     console.error("Firebase Error:", err);
     badge.innerText = "Error";
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--danger);">Gagal memuat data dari database. Pastikan koneksi aman.</td></tr>';
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--danger);">Gagal: ${err.message}</td></tr>`;
 });
 
 // CSV Export Logic
