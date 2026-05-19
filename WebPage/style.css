@@ -12,6 +12,22 @@
     /* MERAH (Bisa dibiarkan untuk darurat lain) */
     --warning: #f39c12;
     /* KUNING (Warna baru yang kamu minta) */
+    --purple: #6c5ce7;
+    /* UNGU (Untuk AI Insight) */
+    
+    /* Premium Icon Colors */
+    --c-sun: #FFB02E;
+    --c-dash: #686de0;
+    --c-mon: #00cec9;
+    --c-hist: #e15f41;
+    --c-set: #786fa6;
+    --c-temp: #ff7979;
+    --c-drop: #48dbfb;
+    --c-leaf: #badc58;
+    --c-bat: #2ecc71;
+    --c-loc: #eb4d4b;
+    --c-ai: #be2edd;
+    --c-brand: #10ac84;
 
     --shadow-out: 8px 8px 22px var(--shadow-dark), -10px -10px 22px var(--shadow-light);
     --shadow-nav-out: 5px 5px 14px var(--shadow-dark), -6px -6px 16px var(--shadow-light);
@@ -364,6 +380,18 @@ h2 {
     color: var(--text-muted);
     font-size: 1.1rem;
 }
+.ic-dash { color: var(--c-dash) !important; }
+.ic-mon { color: var(--c-mon) !important; }
+.ic-hist { color: var(--c-hist) !important; }
+.ic-set { color: var(--c-set) !important; }
+.ic-loc { color: var(--c-loc) !important; }
+.ic-bat { color: var(--c-bat) !important; }
+.ic-ai { color: var(--c-ai) !important; }
+.ic-cloudy { color: var(--c-sun) !important; }
+.ic-temp { color: var(--c-temp) !important; }
+.ic-drop { color: var(--c-drop) !important; }
+.ic-leaf { color: var(--c-leaf) !important; }
+.ic-brand { color: var(--c-brand) !important; }
 h3 {
     font-size: 0.85rem;
     color: var(--text-muted);
