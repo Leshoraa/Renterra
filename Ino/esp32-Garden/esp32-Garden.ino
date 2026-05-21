@@ -1,3 +1,4 @@
+#include <math.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
@@ -10,28 +11,23 @@
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 32
 #define OLED_RESET -1
-
 #define WIFI_CHANNEL 3
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
-
 #define DHTPIN 15
 #define DHTTYPE DHT22
-
 DHT dht(DHTPIN, DHTTYPE);
 
 const int pinSoilMoisture = 35;
 const int pinRaindrop = 34;
 const int pinBattery = 32;
-
 const int btn1 = 26;
 const int btn2 = 27;
 const int btn3 = 13;
 const int btn4 = 14;
 
-// Struktur baru dengan flag tipe pesan dan report interval
 typedef struct DataPacket {
-  uint8_t type; // 0 = Data Sensor, 1 = Ping/Heartbeat
+  uint8_t type;
   int currentInterval;
   float temperature;
   float humidity;
@@ -41,8 +37,7 @@ typedef struct DataPacket {
 } DataPacket;
 
 RTC_DATA_ATTR int currentMenu = 1;
-RTC_DATA_ATTR int currentSensorInterval = 15; // Interval baca sensor (dalam detik)
-RTC_DATA_ATTR int cycleCounter = 0;           // Penghitung siklus bangun 1 detik
+RTC_DATA_ATTR int currentSensorInterval = 15;
 
 unsigned long lastDebounceTime = 0;
 const unsigned long debounceDelay = 200;
@@ -56,7 +51,7 @@ const unsigned long longPressTime = 3000;
 unsigned long startAwakeMillis = 0;
 const unsigned long AWAKE_DURATION = 10000;
 
-bool intervalReceived = false;
+volatile bool intervalReceived = false;
 
 uint8_t gatewayMac[] = {0xA4, 0xF0, 0x0F, 0x73, 0xCB, 0xD0};
 
@@ -65,11 +60,10 @@ void silentDeepSleep() {
   rtc_gpio_set_direction((gpio_num_t)btn1, RTC_GPIO_MODE_INPUT_ONLY);
   rtc_gpio_pullup_en((gpio_num_t)btn1);
   rtc_gpio_pulldown_dis((gpio_num_t)btn1);
-
-  // Selalu tidur tepat 1 detik untuk Fast Polling
-  esp_sleep_enable_timer_wakeup(1000000ULL);
+  
+  uint64_t sleepTime = (uint64_t)currentSensorInterval * 1000000ULL;
+  esp_sleep_enable_timer_wakeup(sleepTime);
   esp_sleep_enable_ext0_wakeup((gpio_num_t)btn1, 0);
-
   esp_deep_sleep_start();
 }
 
@@ -88,17 +82,12 @@ int readBattery() {
   return percent;
 }
 
-void OnDataSent(const wifi_tx_info_t *tx_info, esp_now_send_status_t status) {
-  if (status != ESP_NOW_SEND_SUCCESS) {
-    Serial.println("GAGAL! Node Rumah tidak merespon");
-  }
-}
+void OnDataSent(const wifi_tx_info_t *tx_info, esp_now_send_status_t status) {}
 
 void OnDataRecv(const esp_now_recv_info *info, const uint8_t *incomingData, int len) {
   if (len == sizeof(int)) {
     int newInterval = 15;
     memcpy(&newInterval, incomingData, sizeof(newInterval));
-
     if (newInterval >= 1) {
       currentSensorInterval = newInterval;
       intervalReceived = true;
@@ -107,13 +96,11 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t *incomingData, int 
   }
 }
 
-void sendData(bool fullSensorRead) {
+void sendData() {
   WiFi.mode(WIFI_STA);
-  delay(10); // Waktu inisialisasi minimal
-
+  delay(10);
   if (esp_now_init() != ESP_OK) return;
   esp_wifi_set_channel(WIFI_CHANNEL, WIFI_SECOND_CHAN_NONE);
-
   esp_now_register_send_cb(OnDataSent);
   esp_now_register_recv_cb(OnDataRecv);
 
@@ -122,41 +109,29 @@ void sendData(bool fullSensorRead) {
   memcpy(peerInfo.peer_addr, gatewayMac, 6);
   peerInfo.channel = WIFI_CHANNEL;
   peerInfo.encrypt = false;
-
   if (!esp_now_is_peer_exist(gatewayMac)) {
     esp_now_add_peer(&peerInfo);
   }
 
   DataPacket packet;
+  packet.type = 0;
   packet.currentInterval = currentSensorInterval;
+  packet.temperature = dht.readTemperature();
+  packet.humidity = dht.readHumidity();
+  packet.rawSoil = analogRead(pinSoilMoisture);
+  packet.rawRain = analogRead(pinRaindrop);
+  packet.batteryPercentage = readBattery();
   
-  if (fullSensorRead) {
-    packet.type = 0; // Tipe Data
-    packet.temperature = dht.readTemperature();
-    packet.humidity = dht.readHumidity();
-    packet.rawSoil = analogRead(pinSoilMoisture);
-    packet.rawRain = analogRead(pinRaindrop);
-    packet.batteryPercentage = readBattery();
-    cycleCounter = 0; // Reset counter setelah baca sensor utuh
-    Serial.printf("[ESP-NOW] Mengirim DATA: %.1fC | %.1f%%\n", packet.temperature, packet.humidity);
-  } else {
-    packet.type = 1; // Tipe Ping
-    packet.temperature = 0;
-    packet.humidity = 0;
-    packet.rawSoil = 0;
-    packet.rawRain = 0;
-    packet.batteryPercentage = 0;
-  }
+  Serial.printf("[ESP-NOW] Mengirim DATA: %.1fC | %.1f%%\n", packet.temperature, packet.humidity);
 
   intervalReceived = false;
   esp_now_send(gatewayMac, (uint8_t *)&packet, sizeof(packet));
 
   unsigned long waitStart = millis();
-  // Tunggu balasan dari Gateway max 150ms untuk menghemat baterai
-  while (!intervalReceived && millis() - waitStart < 150) {
+  while (!intervalReceived && millis() - waitStart < 500) {
     delay(10);
   }
-
+  
   esp_now_deinit();
   WiFi.mode(WIFI_OFF);
   btStop();
@@ -170,21 +145,17 @@ void setup() {
   analogReadResolution(12);
 
   esp_sleep_wakeup_cause_t wakeup_reason = esp_sleep_get_wakeup_cause();
-
   if (wakeup_reason == ESP_SLEEP_WAKEUP_TIMER) {
-    cycleCounter++;
-    bool timeToReadSensors = (cycleCounter >= currentSensorInterval);
-    
-    // Inisialisasi DHT hanya jika sudah waktunya baca sensor
-    if (timeToReadSensors) {
-      dht.begin();
-    }
-    
-    sendData(timeToReadSensors);
-    silentDeepSleep(); // Langsung tidur lagi selama 1 detik
+    dht.begin();
+    sendData();
+    silentDeepSleep();
   }
   
-  // LOGIKA SAAT DIBANGUNKAN MANUAL (TOMBOL EXT0)
+  pinMode(btn1, INPUT_PULLUP);
+  pinMode(btn2, INPUT_PULLUP);
+  pinMode(btn3, INPUT_PULLUP);
+  pinMode(btn4, INPUT_PULLUP);
+
   if (wakeup_reason == ESP_SLEEP_WAKEUP_EXT0) {
     while (digitalRead(btn1) == LOW) {
       delay(10);
@@ -192,14 +163,10 @@ void setup() {
   }
 
   dht.begin();
-
-  pinMode(btn1, INPUT_PULLUP);
-  pinMode(btn2, INPUT_PULLUP);
-  pinMode(btn3, INPUT_PULLUP);
-  pinMode(btn4, INPUT_PULLUP);
-
+  
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
-    for (;;) {}
+    Serial.println("OLED Gagal");
+    for (;;) { delay(100); }
   }
 
   display.ssd1306_command(SSD1306_DISPLAYON);
@@ -220,17 +187,14 @@ void setup() {
 
 void loop() {
   checkButtons();
-
   static unsigned long lastSerialPrint = 0;
-
   if (millis() - lastSerialPrint > 2000) {
     printToSerial();
     updateDisplay();
     lastSerialPrint = millis();
   }
-
   if (millis() - startAwakeMillis >= AWAKE_DURATION) {
-    sendData(true); // Kirim update data terbaru sebelum mematikan layar
+    sendData();
     enterDeepSleep();
   }
 }
@@ -238,31 +202,26 @@ void loop() {
 void checkButtons() {
   unsigned long currentMillis = millis();
   bool btn1_state = digitalRead(btn1);
-
   if (btn1_state == LOW && btn1_lastState == HIGH) {
     btn1_pressTime = currentMillis;
     btn1_counting = true;
   }
-
   if (btn1_counting && btn1_state == LOW) {
     if (currentMillis - btn1_pressTime >= longPressTime) {
       ESP.restart();
     }
   }
-
   if (btn1_state == HIGH && btn1_lastState == LOW) {
     btn1_counting = false;
     unsigned long durasiTekan = currentMillis - btn1_pressTime;
-
     if (durasiTekan >= minShortPress && durasiTekan < longPressTime) {
       currentMenu = 1;
       startAwakeMillis = currentMillis;
       updateDisplay();
     }
   }
-
   btn1_lastState = btn1_state;
-
+  
   if ((currentMillis - lastDebounceTime) > debounceDelay) {
     if (digitalRead(btn2) == LOW) {
       currentMenu = 2;
@@ -289,13 +248,12 @@ void updateDisplay() {
   display.clearDisplay();
   display.setCursor(0, 0);
   display.setTextSize(1);
-
   float t = dht.readTemperature();
   float h = dht.readHumidity();
   int rawSoil = analogRead(pinSoilMoisture);
   int rawRain = analogRead(pinRaindrop);
   int batteryPercentage = readBattery();
-
+  
   switch (currentMenu) {
     case 1:
       display.print("[1] Udara");
@@ -309,7 +267,6 @@ void updateDisplay() {
       display.print(h, 1);
       display.println(" %");
       break;
-
     case 2:
       display.print("[2] Tanah");
       display.setCursor(98, 0);
@@ -321,7 +278,6 @@ void updateDisplay() {
       else if (rawSoil > 1500) display.println("LEMBAP");
       else display.println("BASAH");
       break;
-
     case 3:
       display.print("[3] Cuaca");
       display.setCursor(98, 0);
@@ -333,15 +289,22 @@ void updateDisplay() {
       else if (rawRain > 2000) display.println("GERIMIS");
       else display.println("HUJAN");
       break;
-
     case 4:
-      display.print("[4] Analytics");
+      display.print("[4] Analitik");
       display.setCursor(98, 0);
       display.print(batteryPercentage);
       display.println("%");
-      if (rawRain <= 2000) display.println("Siram: JANGAN");
-      else if (rawSoil > 3000) display.println("Siram: PERLU");
-      else display.println("Siram: AMAN");
+      
+      float svp = 0.61078 * exp((17.27 * t) / (t + 237.3));
+      float avp = svp * (h / 100.0);
+      float vpd = svp - avp;
+      
+      display.print("VPD: ");
+      display.print(vpd, 2);
+      display.println(" kPa");
+      
+      if (rawSoil > 3000) display.println("Info: Cek Web Cuaca");
+      else display.println("Info: Kondisi Aman");
       break;
   }
   display.display();
@@ -352,7 +315,6 @@ void printToSerial() {
   float h = dht.readHumidity();
   int rawSoil = analogRead(pinSoilMoisture);
   int rawRain = analogRead(pinRaindrop);
-
   Serial.print("Suhu  : "); Serial.println(t);
   Serial.print("Udara : "); Serial.println(h);
   Serial.print("Soil  : "); Serial.println(rawSoil);

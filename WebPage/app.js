@@ -8,12 +8,14 @@ const db = getDatabase(app);
 const elSuhu = document.getElementById("suhu");
 const elKelembapan = document.getElementById("kelembapan");
 const elAdcTanah = document.getElementById("adc_tanah");
+const elVpdValue = document.getElementById("vpd_value");
 const elBaterai = document.getElementById("baterai");
 const elStatusTanah = document.getElementById("status_tanah");
 const elAiInsight = document.getElementById("ai_insight");
 const elBarSuhu = document.getElementById("bar_suhu");
 const elBarKelembapan = document.getElementById("bar_kelembapan");
 const elBarTanah = document.getElementById("bar_tanah");
+const elBarVpd = document.getElementById("bar_vpd");
 
 elAiInsight.addEventListener('click', () => {
     elAiInsight.classList.toggle('expanded');
@@ -27,7 +29,6 @@ const elDropdownSearch = document.getElementById("location_search");
 const elBmkgIcon = document.getElementById("bmkg_icon");
 const elBmkgTemp = document.getElementById("bmkg_temp");
 const elBmkgStatus = document.getElementById("bmkg_status");
-const elBmkgTime = document.getElementById("bmkg_time");
 
 const sensorRef = ref(db, 'SensorKebun');
 
@@ -84,9 +85,9 @@ const historyChart = new Chart(ctx, {
                 grid: { color: 'rgba(100, 116, 139, 0.1)' },
                 ticks: {
                     color: '#64748b',
-                    maxRotation: 0, // Mencegah label miring/menumpuk
-                    autoSkip: true, // Otomatis skip label kalau terlalu padat
-                    maxTicksLimit: 10 // Batasi jumlah label di bawah agar tidak berdesakan
+                    maxRotation: 0,
+                    autoSkip: true,
+                    maxTicksLimit: 10
                 }
             },
             y: {
@@ -129,6 +130,7 @@ const chartFilterItems = document.querySelectorAll(".chart-filter-item");
 
 let currentChartMode = elChartFilterText.getAttribute('data-value') || "live";
 let realTimeBuffer = [];
+let currentWeatherCode = 0;
 
 function updateChartWithQueue(dataArray, maxSlots) {
     const slicedData = dataArray.length > maxSlots ? dataArray.slice(dataArray.length - maxSlots) : dataArray;
@@ -257,23 +259,27 @@ function parseMarkdown(text) {
     return html;
 }
 
-function generateAgriInsight(suhu, kelembapan, adcTanah) {
-    if (adcTanah > 3500) {
-        return "Tanah dalam kondisi **sangat kering**. Segera lakukan **irigasi** untuk mencegah stres pada tanaman.";
+function generateAgriInsight(suhu, kelembapan, adcTanah, weatherCode, vpd) {
+    const isRainForecast = weatherCode >= 50 && weatherCode <= 99;
+
+    if (adcTanah > 3000) {
+        if (isRainForecast) {
+            return "Tanah kering, namun terdapat prediksi **hujan**. Rekomendasi: `Tunda penyiraman` untuk efisiensi air.";
+        }
+        if (vpd > 1.2) {
+            return "Tanah kering dengan laju penguapan (VPD) **tinggi**. Rekomendasi: `Irigasi volume penuh` segera.";
+        }
+        return "Tanah dalam kondisi **kering**. Rekomendasi: Lakukan irigasi standar.";
     }
-    if (kelembapan >= 70 && kelembapan <= 100 && suhu >= 22 && suhu <= 32) {
-        return "Kelembapan dan suhu **optimal**. Tanaman dalam kondisi sehat dan siap menyerap **nutrisi**.";
+
+    if (adcTanah > 1500) {
+        if (vpd > 1.5 && !isRainForecast) {
+            return "Tanah lembap namun laju penguapan ekstrem terdeteksi. Pantau tren kelembapan.";
+        }
+        return "Kelembapan tanah dan metrik evaporasi dalam batas **optimal**.";
     }
-    if (suhu > 33) {
-        return "Suhu terdeteksi **terlalu panas**. Sebaiknya tambahkan **kipas pendingin** atau semprotkan `mist` untuk menurunkan suhu.";
-    }
-    if (suhu < 20) {
-        return "Suhu sedikit **dingin**. Pastikan tidak terjadi penumpukan `kelembapan tinggi` yang dapat menyebabkan jamur.";
-    }
-    if (kelembapan >= 50 && kelembapan < 70) {
-        return "Tanah dalam kondisi **lembap yang ideal**. Lanjutkan pemantauan rutin.";
-    }
-    return "Kondisi **stabil**. Lanjutkan pemantauan rutin.";
+
+    return "Tanah dalam kondisi **basah**. Hentikan seluruh irigasi untuk mencegah pembusukan akar.";
 }
 
 let isFirstLoad = true;
@@ -314,9 +320,29 @@ onValue(sensorRef, (snapshot) => {
             }
         }
 
+        let currentVpd = 0;
+        if (data.suhu !== undefined && data.kelembapan !== undefined) {
+            const svp = 0.61078 * Math.exp((17.27 * data.suhu) / (data.suhu + 237.3));
+            const avp = svp * (data.kelembapan / 100);
+            currentVpd = svp - avp;
+
+            elVpdValue.innerText = currentVpd.toFixed(2);
+            let pctVpd = (currentVpd / 3.0) * 100;
+            if (pctVpd > 100) pctVpd = 100; else if (pctVpd < 0) pctVpd = 0;
+
+            elBarVpd.style.width = `${pctVpd}%`;
+            if (currentVpd > 1.5) {
+                elBarVpd.style.backgroundColor = "var(--danger)";
+            } else if (currentVpd > 0.8) {
+                elBarVpd.style.backgroundColor = "var(--accent)";
+            } else {
+                elBarVpd.style.backgroundColor = "var(--info)";
+            }
+        }
+
         elBaterai.innerText = data.baterai_persen || "--";
 
-        const rawInsight = generateAgriInsight(data.suhu, data.kelembapan, data.adc_tanah);
+        const rawInsight = generateAgriInsight(data.suhu, data.kelembapan, data.adc_tanah, currentWeatherCode, currentVpd);
         elAiInsight.innerHTML = parseMarkdown(rawInsight);
 
         if (data.suhu !== undefined && data.kelembapan !== undefined && data.adc_tanah !== undefined) {
@@ -378,7 +404,6 @@ function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
     return R * c;
 }
 
-// WMO Weather Code mapping for Open-Meteo
 function mapWeatherIcon(wmoCode) {
     if (wmoCode === 0) return 'clear_day';
     if (wmoCode <= 2) return 'partly_cloudy_day';
@@ -392,6 +417,7 @@ function mapWeatherIcon(wmoCode) {
     if (wmoCode <= 99) return 'thunderstorm';
     return 'cloud_sync';
 }
+
 function wmoToDesc(wmoCode) {
     if (wmoCode === 0) return 'Cerah';
     if (wmoCode <= 2) return 'Sebagian Berawan';
@@ -407,14 +433,21 @@ function wmoToDesc(wmoCode) {
 async function fetchWeather(lat, lon) {
     try {
         elBmkgStatus.innerText = 'Memuat...';
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weathercode,windspeed_10m&timezone=Asia%2FJakarta&forecast_days=1`;
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,cloud_cover,wind_speed_10m&timezone=Asia%2FJakarta&forecast_days=1`;
         const res = await fetch(url);
         const data = await res.json();
         const cur = data.current;
+
+        currentWeatherCode = cur.weather_code || cur.weathercode || 0;
+
         elBmkgTemp.innerText = cur.temperature_2m.toFixed(1);
-        elBmkgStatus.innerText = wmoToDesc(cur.weathercode);
-        elBmkgTime.innerText = `Angin: ${cur.windspeed_10m} km/h`;
-        elBmkgIcon.innerText = mapWeatherIcon(cur.weathercode);
+        elBmkgStatus.innerText = wmoToDesc(currentWeatherCode);
+        elBmkgIcon.innerText = mapWeatherIcon(currentWeatherCode);
+
+        document.getElementById('bmkg_feels').innerText = `${cur.apparent_temperature}°C`;
+        document.getElementById('bmkg_cloud').innerText = `${cur.cloud_cover}%`;
+        document.getElementById('bmkg_rain').innerText = `${cur.precipitation} mm`;
+        document.getElementById('bmkg_wind').innerText = `${cur.wind_speed_10m} km/h`;
     } catch (err) {
         elBmkgStatus.innerText = 'Gagal memuat';
         console.error('Open-Meteo error:', err);
@@ -436,16 +469,14 @@ async function initBMKG() {
         const formatProv = (prov) => prov ? prov.replace(/Propinsi\s|Provinsi\s/g, '') : '';
         const getProv = (st) => st.propinsi || st.provinsi || st.prov || '';
 
-        // LANGKAH 1: Cek cache koordinat — tampil instan tanpa tunggu fetch
         const savedLat = localStorage.getItem('bmkg_lat');
         const savedLon = localStorage.getItem('bmkg_lon');
         const savedLabel = localStorage.getItem('bmkg_station_label');
         if (savedLat && savedLon && savedLabel) {
             elDropdownSelectedText.innerText = savedLabel;
-            fetchWeather(savedLat, savedLon); // Instan dari cache
+            fetchWeather(savedLat, savedLon);
         }
 
-        // LANGKAH 2: Fetch daftar wilayah (bisa pakai cache stale jika ada)
         const res = await fetch(BMKG_API_WILAYAH);
         bmkgStations = await res.json();
 
@@ -482,7 +513,6 @@ async function initBMKG() {
             });
         });
 
-        // LANGKAH 3: Hanya jalankan geolokasi jika belum ada cache
         if (!savedLat && navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
@@ -502,7 +532,6 @@ async function initBMKG() {
                     localStorage.setItem('bmkg_station_label', label);
                 },
                 () => {
-                    // Fallback: Yogyakarta koordinat
                     elDropdownSelectedText.innerText = 'Yogyakarta';
                     fetchWeather(-7.7956, 110.3695);
                 }
@@ -517,3 +546,29 @@ async function initBMKG() {
 }
 
 initBMKG();
+
+function updateClock() {
+    const timeEl = document.getElementById('live_time');
+    const dateEl = document.getElementById('live_date');
+    const greetEl = document.getElementById('time_greeting');
+
+    if (timeEl && dateEl && greetEl) {
+        const now = new Date();
+        timeEl.innerText = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+
+        const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
+        dateEl.innerText = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
+
+        const hour = now.getHours();
+        let greet = 'Malam';
+        if (hour >= 5 && hour < 11) greet = 'Pagi';
+        else if (hour >= 11 && hour < 15) greet = 'Siang';
+        else if (hour >= 15 && hour < 18) greet = 'Sore';
+
+        greetEl.innerText = greet;
+    }
+}
+
+setInterval(updateClock, 1000);
+updateClock();

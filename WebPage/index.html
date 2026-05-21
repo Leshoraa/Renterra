@@ -87,9 +87,9 @@
                 </div>
             </header>
             <main class="bento-grid">
+
                 <div class="bento-card span-3 ai-card">
                     <div class="card-header">
-                        <span class="material-symbols-rounded icon-accent ic-ai">psychology</span>
                         <h3>AI AGRI-INSIGHT</h3>
                         <span class="badge">Local LLM</span>
                     </div>
@@ -97,20 +97,20 @@
                         Menganalisis data lingkungan secara real-time...
                     </div>
                 </div>
-                <div class="bento-card row-span-2 weather-card">
-                    <div class="card-header">
-                        <span class="material-symbols-rounded icon-accent ic-cloudy">partly_cloudy_day</span>
-                        <h3>PRAKIRAAN CUACA</h3>
+
+                <div class="bento-card compact-card clock-card">
+                    <div class="card-header-compact">
+                        <span class="material-symbols-rounded icon-accent ic-dash">schedule</span>
+                        <h3>WAKTU LOKAL</h3>
                     </div>
-                    <div class="weather-content" id="bmkg_content">
-                        <span class="material-symbols-rounded giant-icon" id="bmkg_icon">sync</span>
-                        <div class="value-wrapper">
-                            <span class="value" id="bmkg_temp">--</span><span class="unit">°C</span>
+                    <div class="clock-content">
+                        <span class="clock-time tabular-nums" id="live_time">--:--</span>
+                        <div class="status-badge" id="time_greeting" style="margin: 12px 0; color: var(--info);">--
                         </div>
-                        <p class="weather-status-text" id="bmkg_status">Memuat data...</p>
-                        <p class="weather-time-text" id="bmkg_time">--:--</p>
+                        <span class="unit" id="live_date" style="font-size: 0.85rem;">--</span>
                     </div>
                 </div>
+
                 <div class="sensor-cards-wrapper">
                     <div class="bento-card compact-card">
                         <div class="card-header-compact">
@@ -125,7 +125,7 @@
                             <div class="sensor-progress-bar" id="bar_suhu"></div>
                         </div>
                     </div>
-                
+
                     <div class="bento-card compact-card">
                         <div class="card-header-compact">
                             <span class="material-symbols-rounded icon-accent ic-drop">water_drop</span>
@@ -139,7 +139,7 @@
                             <div class="sensor-progress-bar" id="bar_kelembapan"></div>
                         </div>
                     </div>
-                
+
                     <div class="bento-card compact-card">
                         <div class="card-header-compact">
                             <span class="material-symbols-rounded icon-accent ic-leaf">grass</span>
@@ -153,15 +153,75 @@
                             <div class="sensor-progress-bar" id="bar_tanah"></div>
                         </div>
                     </div>
+
+                    <div class="bento-card compact-card">
+                        <div class="card-header-compact">
+                            <span class="material-symbols-rounded icon-accent ic-ai">air</span>
+                            <h3>VPD (PENGUAPAN)</h3>
+                        </div>
+                        <div class="value-wrapper">
+                            <span class="value tabular-nums" id="vpd_value">--</span>
+                            <span class="unit">kPa</span>
+                        </div>
+                        <div class="sensor-progress-wrapper">
+                            <div class="sensor-progress-bar" id="bar_vpd"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bento-card weather-card">
+                    <div class="card-header">
+                        <span class="material-symbols-rounded icon-accent ic-cloudy">partly_cloudy_day</span>
+                        <h3>PRAKIRAAN CUACA</h3>
+                    </div>
+                    <div class="weather-content" id="bmkg_content">
+                        <span class="material-symbols-rounded giant-icon" id="bmkg_icon">sync</span>
+                        <div class="value-wrapper">
+                            <span class="value" id="bmkg_temp">--</span><span class="unit">°C</span>
+                        </div>
+                        <p class="weather-status-text" id="bmkg_status">Memuat data...</p>
+
+                        <div class="weather-details">
+                            <div class="w-detail">
+                                <span class="material-symbols-rounded">thermostat</span>
+                                <div class="w-detail-text">
+                                    <span class="w-label">Terasa</span>
+                                    <span class="w-val" id="bmkg_feels">--</span>
+                                </div>
+                            </div>
+                            <div class="w-detail">
+                                <span class="material-symbols-rounded">cloud</span>
+                                <div class="w-detail-text">
+                                    <span class="w-label">Awan</span>
+                                    <span class="w-val" id="bmkg_cloud">--</span>
+                                </div>
+                            </div>
+                            <div class="w-detail">
+                                <span class="material-symbols-rounded">water_drop</span>
+                                <div class="w-detail-text">
+                                    <span class="w-label">Hujan</span>
+                                    <span class="w-val" id="bmkg_rain">--</span>
+                                </div>
+                            </div>
+                            <div class="w-detail">
+                                <span class="material-symbols-rounded">air</span>
+                                <div class="w-detail-text">
+                                    <span class="w-label">Angin</span>
+                                    <span class="w-val" id="bmkg_wind">--</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="bento-card span-4 giant-layout">
-                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div class="card-header"
+                        style="display: flex; justify-content: space-between; align-items: center;">
                         <div style="display: flex; align-items: center; gap: 12px;">
                             <span class="material-symbols-rounded icon-accent ic-hist">area_chart</span>
                             <h3>GRAFIK HISTORIS</h3>
                         </div>
-                
+
                         <div class="neumorph-pill-inset custom-dropdown" id="chart_filter_dropdown"
                             style="padding: 6px 16px; min-width: 140px; display: flex; align-items: center; justify-content: space-between; gap: 4px; z-index: 50;">
                             <div class="dropdown-selected" id="chart_filter_text" data-value="live"
@@ -170,7 +230,8 @@
                                 style="font-size: 1.1rem; margin-left: 4px;">expand_more</span>
                             <div class="dropdown-list" id="chart_filter_list" style="width: 100%; top: 120%;">
                                 <div class="dropdown-items-container">
-                                    <div class="dropdown-item chart-filter-item active" data-value="live">Real-time</div>
+                                    <div class="dropdown-item chart-filter-item active" data-value="live">Real-time
+                                    </div>
                                     <div class="dropdown-item chart-filter-item" data-value="jam">Per Jam</div>
                                     <div class="dropdown-item chart-filter-item" data-value="hari">Per Hari</div>
                                     <div class="dropdown-item chart-filter-item" data-value="minggu">Per Minggu</div>
@@ -179,7 +240,7 @@
                             </div>
                         </div>
                     </div>
-                
+
                     <div class="giant-content-placeholder" style="position: relative; padding: 16px;">
                         <canvas id="historyChart"></canvas>
                     </div>

@@ -20,6 +20,8 @@ const btnSaveInterval = document.getElementById("btn_save_interval");
 
 const sensorRef = ref(db, 'SensorKebun');
 let lastTimestamp = 0;
+let lastLocalUpdateTime = Date.now();
+let isOffline = false;
 
 // Logika UI Dropdown Interval
 elIntervalDropdown.addEventListener('click', () => {
@@ -132,6 +134,8 @@ onValue(sensorRef, (snapshot) => {
 
         if (data.last_update && data.last_update !== lastTimestamp) {
             lastTimestamp = data.last_update;
+            lastLocalUpdateTime = Date.now();
+            isOffline = false;
             pushLogMessage(`[ESP-NOW] Packet received: Suhu=${data.suhu?.toFixed(1)}°C, Tanah=${data.adc_tanah}`, 'success');
             elNodeKebunStatus.innerHTML = '<div class="dot online"></div>ONLINE';
         }
@@ -140,8 +144,11 @@ onValue(sensorRef, (snapshot) => {
 
 setInterval(() => {
     const nowMs = Date.now();
-    if (lastTimestamp && (nowMs - lastTimestamp > 30000)) {
-        elNodeKebunStatus.innerHTML = '<div class="dot"></div>OFFLINE / SLEEP';
-        pushLogMessage(`[SYSTEM] Node kebun melewati batas respon timeout.`, 'info');
+    if (lastTimestamp && (nowMs - lastLocalUpdateTime > 60000)) {
+        if (!isOffline) {
+            elNodeKebunStatus.innerHTML = '<div class="dot"></div>OFFLINE / SLEEP';
+            pushLogMessage(`[SYSTEM] Node kebun melewati batas respon timeout.`, 'info');
+            isOffline = true;
+        }
     }
 }, 5000);

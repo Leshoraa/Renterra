@@ -179,8 +179,8 @@ void loop() {
       json.set("baterai_persen", myData.batteryPercentage);
       json.set("live_buffer", liveStr);
 
-      Firebase.RTDB.updateNode(&fbdo, "/SensorKebun", &json);
-      Firebase.RTDB.setTimestamp(&fbdo, "/SensorKebun/last_update");
+      Firebase.RTDB.updateNodeAsync(&fbdo, "/SensorKebun", &json);
+      Firebase.RTDB.setTimestampAsync(&fbdo, "/SensorKebun/last_update");
       
       // 2. PUSH DATA HISTORIS (Dibatasi per 5 menit agar DB tidak penuh)
       if (millis() - lastHistoryPush >= HISTORY_INTERVAL || lastHistoryPush == 0) {
@@ -190,7 +190,7 @@ void loop() {
         historyJson.set("adc_tanah", myData.rawSoil);
         historyJson.set("timestamp/.sv", "timestamp"); // Otomatis catat waktu server Firebase
         
-        Firebase.RTDB.pushJSON(&fbdo, "/SensorHistory", &historyJson);
+        Firebase.RTDB.pushJSONAsync(&fbdo, "/SensorHistory", &historyJson);
         lastHistoryPush = millis();
         Serial.println("[FIREBASE] Update Real-time & Push History OK");
       } else {
