@@ -16,6 +16,7 @@ const elBarSuhu = document.getElementById("bar_suhu");
 const elBarKelembapan = document.getElementById("bar_kelembapan");
 const elBarTanah = document.getElementById("bar_tanah");
 const elBarVpd = document.getElementById("bar_vpd");
+const elLastUpdateTime = document.getElementById("last_update_time");
 
 elAiInsight.addEventListener('click', () => {
     elAiInsight.classList.toggle('expanded');
@@ -341,6 +342,14 @@ onValue(sensorRef, (snapshot) => {
         }
 
         elBaterai.innerText = data.baterai_persen || "--";
+
+        if (data.last_update) {
+            const date = new Date(data.last_update);
+            const timeStr = date.getHours().toString().padStart(2, '0') + ':' + 
+                            date.getMinutes().toString().padStart(2, '0') + ':' + 
+                            date.getSeconds().toString().padStart(2, '0');
+            if (elLastUpdateTime) elLastUpdateTime.innerText = timeStr;
+        }
 
         const rawInsight = generateAgriInsight(data.suhu, data.kelembapan, data.adc_tanah, currentWeatherCode, currentVpd);
         elAiInsight.innerHTML = parseMarkdown(rawInsight);

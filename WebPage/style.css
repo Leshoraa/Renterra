@@ -418,6 +418,19 @@ h2 {
     margin-bottom: 24px;
 }
 
+.chart-controls-scroll {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    overflow-x: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.chart-controls-scroll::-webkit-scrollbar {
+    display: none;
+}
+
 .icon-accent {
     color: var(--text-muted);
     font-size: 1.1rem;
