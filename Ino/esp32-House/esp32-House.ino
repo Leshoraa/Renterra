@@ -15,6 +15,8 @@
 #define WIFI_CHANNEL 3
 
 FirebaseData fbdo;
+FirebaseData fbdoHistory;
+FirebaseData fbdoRead;
 FirebaseAuth auth;
 FirebaseConfig config;
 
@@ -98,6 +100,8 @@ void setup() {
   config.timeout.socketConnection = 10 * 1000;
   
   fbdo.setBSSLBufferSize(1024, 512);
+  fbdoHistory.setBSSLBufferSize(1024, 512);
+  fbdoRead.setBSSLBufferSize(1024, 512);
 
   if (Firebase.signUp(&config, &auth, "", "")) {
     Serial.println(F("Firebase Ready"));
@@ -186,9 +190,12 @@ void loop() {
       json.set("adc_hujan", myData.rawRain);
       json.set("baterai_persen", myData.batteryPercentage);
       json.set("live_buffer", liveStr);
+      
+      FirebaseJson svJson;
+      svJson.set(".sv", "timestamp");
+      json.set("last_update", svJson);
 
       Firebase.RTDB.updateNodeAsync(&fbdo, "/SensorKebun", &json);
-      Firebase.RTDB.setTimestampAsync(&fbdo, "/SensorKebun/last_update");
       
       // 2. PUSH DATA HISTORIS (Dibatasi per 5 menit agar DB tidak penuh)
       if (millis() - lastHistoryPush >= HISTORY_INTERVAL || lastHistoryPush == 0) {
@@ -196,9 +203,12 @@ void loop() {
         historyJson.set("suhu", myData.temperature);
         historyJson.set("kelembapan", myData.humidity);
         historyJson.set("adc_tanah", myData.rawSoil);
-        historyJson.set("timestamp/.sv", "timestamp"); // Otomatis catat waktu server Firebase
         
-        Firebase.RTDB.pushJSONAsync(&fbdo, "/SensorHistory", &historyJson);
+        FirebaseJson svHist;
+        svHist.set(".sv", "timestamp");
+        historyJson.set("timestamp", svHist);
+        
+        Firebase.RTDB.pushJSONAsync(&fbdoHistory, "/SensorHistory", &historyJson);
         lastHistoryPush = millis();
         Serial.println(F("[FIREBASE] Update Real-time & Push History OK"));
       } else {
@@ -211,8 +221,8 @@ void loop() {
   // Cek Interval Baru dari Web/Firebase (tiap 2 detik)
   if (millis() - lastFbCheck > 2000) {
     if (Firebase.ready()) {
-      if (Firebase.RTDB.getInt(&fbdo, "/SensorKebun/update_interval")) {
-        int fbInterval = fbdo.intData();
+      if (Firebase.RTDB.getInt(&fbdoRead, "/SensorKebun/update_interval")) {
+        int fbInterval = fbdoRead.intData();
         // Cek agar tidak error jika interval diset 0 atau ngaco
         if (fbInterval >= 1 && fbInterval != currentUpdateInterval) {
           currentUpdateInterval = fbInterval;
