@@ -7,6 +7,8 @@
 #include <esp_now.h>
 #include <driver/rtc_io.h>
 #include "esp_wifi.h"
+#include "soc/soc.h"
+#include "soc/rtc_cntl_reg.h"
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 32
@@ -153,6 +155,8 @@ void sendData() {
 }
 
 void setup() {
+  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // Mematikan paksa Brownout Detector
+  
   Serial.begin(115200);
   setCpuFrequencyMhz(80);
   WiFi.mode(WIFI_OFF);
