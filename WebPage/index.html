@@ -223,33 +223,39 @@
                         </div>
 
                         <div class="chart-controls-scroll">
-                            <div class="neumorph-pill-inset" title="Terakhir Update" style="padding: 6px 16px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; margin-left: auto;">
-                                <span class="material-symbols-rounded icon-accent" style="color: var(--warning); font-size: 1.1rem;">update</span>
-                                <span id="last_update_time" style="font-weight: 600; font-size: 0.85rem; color: var(--text-muted);">--:--</span>
+                            <div class="neumorph-pill-inset" title="Terakhir Update"
+                                style="padding: 6px 16px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; margin-left: auto;">
+                                <span class="material-symbols-rounded icon-accent"
+                                    style="color: var(--warning); font-size: 1.1rem;">update</span>
+                                <span id="last_update_time"
+                                    style="font-weight: 600; font-size: 0.85rem; color: var(--text-muted);">--:--</span>
                             </div>
 
                             <div class="neumorph-pill-inset custom-dropdown" id="chart_filter_dropdown"
                                 style="padding: 6px 16px; min-width: 140px; display: flex; align-items: center; justify-content: space-between; gap: 4px; z-index: 50; flex-shrink: 0;">
-                            <div class="dropdown-selected" id="chart_filter_text" data-value="live"
-                                style="font-weight: 600; font-size: 0.85rem;">Real-time</div>
-                            <span class="material-symbols-rounded icon-accent dropdown-arrow"
-                                style="font-size: 1.1rem; margin-left: 4px;">expand_more</span>
-                            <div class="dropdown-list" id="chart_filter_list" style="width: 100%; top: 120%;">
-                                <div class="dropdown-items-container">
-                                    <div class="dropdown-item chart-filter-item active" data-value="live">Real-time
+                                <div class="dropdown-selected" id="chart_filter_text" data-value="live"
+                                    style="font-weight: 600; font-size: 0.85rem;">Real-time</div>
+                                <span class="material-symbols-rounded icon-accent dropdown-arrow"
+                                    style="font-size: 1.1rem; margin-left: 4px;">expand_more</span>
+                                <div class="dropdown-list" id="chart_filter_list" style="width: 100%; top: 120%;">
+                                    <div class="dropdown-items-container">
+                                        <div class="dropdown-item chart-filter-item active" data-value="live">Real-time
+                                        </div>
+                                        <div class="dropdown-item chart-filter-item" data-value="jam">Per Jam</div>
+                                        <div class="dropdown-item chart-filter-item" data-value="hari">Per Hari</div>
+                                        <div class="dropdown-item chart-filter-item" data-value="minggu">Per Minggu
+                                        </div>
+                                        <div class="dropdown-item chart-filter-item" data-value="bulan">Per Bulan</div>
                                     </div>
-                                    <div class="dropdown-item chart-filter-item" data-value="jam">Per Jam</div>
-                                    <div class="dropdown-item chart-filter-item" data-value="hari">Per Hari</div>
-                                    <div class="dropdown-item chart-filter-item" data-value="minggu">Per Minggu</div>
-                                    <div class="dropdown-item chart-filter-item" data-value="bulan">Per Bulan</div>
                                 </div>
                             </div>
-                        </div>
                         </div> <!-- close chart-controls-scroll -->
                     </div> <!-- close card-header -->
 
-                    <div class="giant-content-placeholder" style="position: relative; padding: 16px;">
-                        <canvas id="historyChart"></canvas>
+                    <div class="giant-content-placeholder">
+                        <div style="position: relative; width: 100%; height: 350px;">
+                            <canvas id="historyChart"></canvas>
+                        </div>
                     </div>
                 </div>
             </main>
