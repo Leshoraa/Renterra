@@ -195,31 +195,34 @@ void loop() {
       svJson.set(".sv", "timestamp");
       json.set("last_update", svJson);
 
-      Firebase.RTDB.updateNodeAsync(&fbdo, "/SensorKebun", &json);
-      
-      // 2. PUSH DATA HISTORIS (Dibatasi per 5 menit agar DB tidak penuh)
-      if (millis() - lastHistoryPush >= HISTORY_INTERVAL || lastHistoryPush == 0) {
-        historyJson.clear();
-        historyJson.set("suhu", myData.temperature);
-        historyJson.set("kelembapan", myData.humidity);
-        historyJson.set("adc_tanah", myData.rawSoil);
-        
-        FirebaseJson svHist;
-        svHist.set(".sv", "timestamp");
-        historyJson.set("timestamp", svHist);
-        
-        Firebase.RTDB.pushJSONAsync(&fbdoHistory, "/SensorHistory", &historyJson);
-        lastHistoryPush = millis();
-        Serial.println(F("[FIREBASE] Update Real-time & Push History OK"));
+      if (Firebase.RTDB.updateNode(&fbdo, "/SensorKebun", &json)) {
+        // 2. PUSH DATA HISTORIS (Dibatasi per 5 menit agar DB tidak penuh)
+        if (millis() - lastHistoryPush >= HISTORY_INTERVAL || lastHistoryPush == 0) {
+          historyJson.clear();
+          historyJson.set("suhu", myData.temperature);
+          historyJson.set("kelembapan", myData.humidity);
+          historyJson.set("adc_tanah", myData.rawSoil);
+          
+          FirebaseJson svHist;
+          svHist.set(".sv", "timestamp");
+          historyJson.set("timestamp", svHist);
+          
+          Firebase.RTDB.pushJSON(&fbdoHistory, "/SensorHistory", &historyJson);
+          lastHistoryPush = millis();
+          Serial.println(F("[FIREBASE] Update Real-time & Push History OK"));
+        } else {
+          Serial.println(F("[FIREBASE] Update Real-time OK (History Skipped)"));
+        }
       } else {
-        Serial.println(F("[FIREBASE] Update Real-time OK (History Skipped)"));
+        Serial.print(F("[FIREBASE] Error Update Real-time: "));
+        Serial.println(fbdo.errorReason());
       }
     }
   } // Penutup else dari pengecekan NaN
   } // Penutup if (localNewData)
 
-  // Cek Interval Baru dari Web/Firebase (tiap 2 detik)
-  if (millis() - lastFbCheck > 2000) {
+  // Cek Interval Baru dari Web/Firebase (tiap 10 detik)
+  if (millis() - lastFbCheck > 10000) {
     if (Firebase.ready()) {
       if (Firebase.RTDB.getInt(&fbdoRead, "/SensorKebun/update_interval")) {
         int fbInterval = fbdoRead.intData();

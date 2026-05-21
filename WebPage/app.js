@@ -349,26 +349,34 @@ onValue(sensorRef, (snapshot) => {
         elAiInsight.innerHTML = parseMarkdown(rawInsight);
 
         if (data.suhu !== undefined && data.kelembapan !== undefined && data.adc_tanah !== undefined) {
-            const now = new Date();
+            let pointTime = new Date();
+            if (data.last_update) {
+                pointTime = new Date(data.last_update);
+            }
 
             if (isFirstLoad && data.live_buffer) {
                 isFirstLoad = false;
                 
-                if (elLastUpdateTime && data.last_update) {
-                    const date = new Date(data.last_update);
-                    elLastUpdateTime.innerText = date.getHours().toString().padStart(2, '0') + ':' + 
-                                                 date.getMinutes().toString().padStart(2, '0') + ':' + 
-                                                 date.getSeconds().toString().padStart(2, '0');
+                if (elLastUpdateTime) {
+                    elLastUpdateTime.innerText = pointTime.getHours().toString().padStart(2, '0') + ':' + 
+                                                 pointTime.getMinutes().toString().padStart(2, '0') + ':' + 
+                                                 pointTime.getSeconds().toString().padStart(2, '0');
                 }
 
                 const points = data.live_buffer.split('|').filter(p => p.length > 0);
                 realTimeBuffer = [];
+                
+                let intervalMs = 15000; // Default 15 detik
+                if (data.update_interval) {
+                    intervalMs = data.update_interval * 1000;
+                }
+
                 for (let i = 0; i < points.length; i++) {
                     const parts = points[i].split(',');
-                    const pointTime = new Date(now.getTime() - (points.length - 1 - i) * 1000);
-                    const timeLabel = pointTime.getHours().toString().padStart(2, '0') + ':' +
-                        pointTime.getMinutes().toString().padStart(2, '0') + ':' +
-                        pointTime.getSeconds().toString().padStart(2, '0');
+                    const bufTime = new Date(pointTime.getTime() - (points.length - 1 - i) * intervalMs);
+                    const timeLabel = bufTime.getHours().toString().padStart(2, '0') + ':' +
+                        bufTime.getMinutes().toString().padStart(2, '0') + ':' +
+                        bufTime.getSeconds().toString().padStart(2, '0');
 
                     realTimeBuffer.push({
                         label: timeLabel,
@@ -378,9 +386,9 @@ onValue(sensorRef, (snapshot) => {
                     });
                 }
             } else {
-                const timeLabel = now.getHours().toString().padStart(2, '0') + ':' +
-                    now.getMinutes().toString().padStart(2, '0') + ':' +
-                    now.getSeconds().toString().padStart(2, '0');
+                const timeLabel = pointTime.getHours().toString().padStart(2, '0') + ':' +
+                    pointTime.getMinutes().toString().padStart(2, '0') + ':' +
+                    pointTime.getSeconds().toString().padStart(2, '0');
 
                 if (elLastUpdateTime) elLastUpdateTime.innerText = timeLabel;
 
