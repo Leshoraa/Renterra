@@ -416,19 +416,15 @@ h2 {
     align-items: center;
     gap: 12px;
     margin-bottom: 24px;
+    flex-wrap: wrap;
 }
 
 .chart-controls-scroll {
     display: flex;
     align-items: center;
     gap: 12px;
-    overflow-x: auto;
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
-
-.chart-controls-scroll::-webkit-scrollbar {
-    display: none;
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
 .icon-accent {
