@@ -343,13 +343,7 @@ onValue(sensorRef, (snapshot) => {
 
         elBaterai.innerText = data.baterai_persen || "--";
 
-        if (data.last_update) {
-            const date = new Date(data.last_update);
-            const timeStr = date.getHours().toString().padStart(2, '0') + ':' + 
-                            date.getMinutes().toString().padStart(2, '0') + ':' + 
-                            date.getSeconds().toString().padStart(2, '0');
-            if (elLastUpdateTime) elLastUpdateTime.innerText = timeStr;
-        }
+        // Timestamp akan diperbarui di blok bawah agar presisi dengan chart
 
         const rawInsight = generateAgriInsight(data.suhu, data.kelembapan, data.adc_tanah, currentWeatherCode, currentVpd);
         elAiInsight.innerHTML = parseMarkdown(rawInsight);
@@ -359,6 +353,14 @@ onValue(sensorRef, (snapshot) => {
 
             if (isFirstLoad && data.live_buffer) {
                 isFirstLoad = false;
+                
+                if (elLastUpdateTime && data.last_update) {
+                    const date = new Date(data.last_update);
+                    elLastUpdateTime.innerText = date.getHours().toString().padStart(2, '0') + ':' + 
+                                                 date.getMinutes().toString().padStart(2, '0') + ':' + 
+                                                 date.getSeconds().toString().padStart(2, '0');
+                }
+
                 const points = data.live_buffer.split('|').filter(p => p.length > 0);
                 realTimeBuffer = [];
                 for (let i = 0; i < points.length; i++) {
@@ -379,6 +381,8 @@ onValue(sensorRef, (snapshot) => {
                 const timeLabel = now.getHours().toString().padStart(2, '0') + ':' +
                     now.getMinutes().toString().padStart(2, '0') + ':' +
                     now.getSeconds().toString().padStart(2, '0');
+
+                if (elLastUpdateTime) elLastUpdateTime.innerText = timeLabel;
 
                 realTimeBuffer.push({
                     label: timeLabel,

@@ -800,6 +800,16 @@ h3 {
         font-size: 1rem;
     }
 
+    .location-picker .dropdown-list {
+        position: fixed;
+        top: 24%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 85%;
+        max-width: 350px;
+        z-index: 9999;
+    }
+
     .status-pill {
         padding: 6px 10px;
     }
