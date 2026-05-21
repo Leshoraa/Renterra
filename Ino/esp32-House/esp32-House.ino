@@ -94,9 +94,13 @@ void setup() {
 
   config.api_key = API_KEY;
   config.database_url = DATABASE_URL;
+  config.timeout.networkReconnect = 10 * 1000;
+  config.timeout.socketConnection = 10 * 1000;
+  
+  fbdo.setBSSLBufferSize(1024, 512);
 
   if (Firebase.signUp(&config, &auth, "", "")) {
-    Serial.println("Firebase Ready");
+    Serial.println(F("Firebase Ready"));
   }
 
   config.token_status_callback = tokenStatusCallback;
@@ -106,12 +110,12 @@ void setup() {
   esp_wifi_set_channel(WIFI_CHANNEL, WIFI_SECOND_CHAN_NONE);
 
   if (esp_now_init() != ESP_OK) {
-    Serial.println("ESP-NOW Error");
+    Serial.println(F("ESP-NOW Error"));
     return;
   }
 
   esp_now_register_recv_cb(OnDataRecv);
-  Serial.println("Gateway Ready");
+  Serial.println(F("Gateway Ready"));
 }
 
 void loop() {
@@ -148,12 +152,15 @@ void loop() {
 
   // Bagian Upload Firebase (Hanya dieksekusi dari DataPacket Type 0)
   if (localNewData) {
-    Serial.println("\n[GATEWAY] DATA DITERIMA & DITERUSKAN");
-    Serial.print("Suhu: "); Serial.println(myData.temperature);
-    Serial.print("Lembap: "); Serial.println(myData.humidity);
-    Serial.print("Tanah: "); Serial.println(myData.rawSoil);
-    Serial.print("Hujan: "); Serial.println(myData.rawRain);
-    Serial.print("Baterai: "); Serial.println(myData.batteryPercentage);
+    if (isnan(myData.temperature) || isnan(myData.humidity)) {
+      Serial.println(F("[GATEWAY] Data korup (NaN) dari kebun! Transmisi dibatalkan."));
+    } else {
+      Serial.println(F("\n[GATEWAY] DATA DITERIMA & DITERUSKAN"));
+      Serial.print(F("Suhu: ")); Serial.println(myData.temperature);
+      Serial.print(F("Lembap: ")); Serial.println(myData.humidity);
+      Serial.print(F("Tanah: ")); Serial.println(myData.rawSoil);
+      Serial.print(F("Hujan: ")); Serial.println(myData.rawRain);
+      Serial.print(F("Baterai: ")); Serial.println(myData.batteryPercentage);
 
     if (Firebase.ready()) {
       // Simpan 15 titik terakhir di memori ESP32
@@ -164,6 +171,7 @@ void loop() {
       if (liveCount < MAX_LIVE_POINTS) liveCount++;
 
       String liveStr = "";
+      liveStr.reserve(256);
       for (int i = 0; i < liveCount; i++) {
         int idx = (liveIndex - liveCount + i + MAX_LIVE_POINTS) % MAX_LIVE_POINTS;
         liveStr += String(liveSuhu[idx], 1) + "," + String(liveKel[idx], 1) + "," + String(liveTanah[idx]);
@@ -192,12 +200,13 @@ void loop() {
         
         Firebase.RTDB.pushJSONAsync(&fbdo, "/SensorHistory", &historyJson);
         lastHistoryPush = millis();
-        Serial.println("[FIREBASE] Update Real-time & Push History OK");
+        Serial.println(F("[FIREBASE] Update Real-time & Push History OK"));
       } else {
-        Serial.println("[FIREBASE] Update Real-time OK (History Skipped)");
+        Serial.println(F("[FIREBASE] Update Real-time OK (History Skipped)"));
       }
     }
-  }
+  } // Penutup else dari pengecekan NaN
+  } // Penutup if (localNewData)
 
   // Cek Interval Baru dari Web/Firebase (tiap 2 detik)
   if (millis() - lastFbCheck > 2000) {

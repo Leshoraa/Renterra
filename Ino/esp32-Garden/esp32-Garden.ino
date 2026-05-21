@@ -53,7 +53,21 @@ const unsigned long AWAKE_DURATION = 10000;
 
 volatile bool intervalReceived = false;
 
-uint8_t gatewayMac[] = {0xA4, 0xF0, 0x0F, 0x73, 0xCB, 0xD0};
+const uint8_t gatewayMac[] = {0xA4, 0xF0, 0x0F, 0x73, 0xCB, 0xD0};
+
+float cachedTemp = 0.0;
+float cachedHum = 0.0;
+unsigned long lastDhtRead = 0;
+
+void updateDhtCache() {
+  if (millis() - lastDhtRead >= 2000 || lastDhtRead == 0) {
+    float t = dht.readTemperature();
+    float h = dht.readHumidity();
+    if (!isnan(t)) cachedTemp = t;
+    if (!isnan(h)) cachedHum = h;
+    lastDhtRead = millis();
+  }
+}
 
 void silentDeepSleep() {
   rtc_gpio_init((gpio_num_t)btn1);
@@ -113,11 +127,12 @@ void sendData() {
     esp_now_add_peer(&peerInfo);
   }
 
+  updateDhtCache();
   DataPacket packet;
   packet.type = 0;
   packet.currentInterval = currentSensorInterval;
-  packet.temperature = dht.readTemperature();
-  packet.humidity = dht.readHumidity();
+  packet.temperature = cachedTemp;
+  packet.humidity = cachedHum;
   packet.rawSoil = analogRead(pinSoilMoisture);
   packet.rawRain = analogRead(pinRaindrop);
   packet.batteryPercentage = readBattery();
@@ -245,11 +260,12 @@ void checkButtons() {
 }
 
 void updateDisplay() {
+  updateDhtCache();
   display.clearDisplay();
   display.setCursor(0, 0);
   display.setTextSize(1);
-  float t = dht.readTemperature();
-  float h = dht.readHumidity();
+  float t = cachedTemp;
+  float h = cachedHum;
   int rawSoil = analogRead(pinSoilMoisture);
   int rawRain = analogRead(pinRaindrop);
   int batteryPercentage = readBattery();
@@ -311,16 +327,16 @@ void updateDisplay() {
 }
 
 void printToSerial() {
-  float t = dht.readTemperature();
-  float h = dht.readHumidity();
+  updateDhtCache();
+  float t = cachedTemp;
+  float h = cachedHum;
   int rawSoil = analogRead(pinSoilMoisture);
   int rawRain = analogRead(pinRaindrop);
-  Serial.print("Suhu  : "); Serial.println(t);
-  Serial.print("Udara : "); Serial.println(h);
-  Serial.print("Soil  : "); Serial.println(rawSoil);
-  Serial.print("Rain  : "); Serial.println(rawRain);
-  Serial.print("Sleep : ");
+  Serial.print(F("Suhu  : ")); Serial.println(t);
+  Serial.print(F("Udara : ")); Serial.println(h);
+  Serial.print(F("Soil  : ")); Serial.println(rawSoil);
+  Serial.print(F("Rain  : ")); Serial.println(rawRain);
+  Serial.print(F("Sleep : "));
   Serial.print(currentSensorInterval);
-  Serial.println(" detik (Interval Aktual)");
-  Serial.println();
+  Serial.println(F(" detik (Interval Aktual)\n"));
 }
